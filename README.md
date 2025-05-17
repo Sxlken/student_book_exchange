@@ -86,4 +86,4 @@ Electronic Library is a Flask-based web application designed to facilitate book 
    flask run
    ```
 
-8. Access the application at http://localhost:5000
+8. Done!
