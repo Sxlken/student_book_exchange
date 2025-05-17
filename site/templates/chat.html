@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Chat with {{ receiver.display_name }} - Student Book Exchange</title>
+    <style>
+        .chat-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+        }
+
+        /* Hide footer on chat page */
+        footer, 
+        .footer-content, 
+        .footer-section, 
+        .footer-bottom {
+            display: none !important;
+        }
+
+        .chat-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .back-button {
+            text-decoration: none;
+            color: #666;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .back-button:hover {
+            color: #333;
+        }
+
+        .back-button i {
+            margin-right: 5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .avatar i {
+            font-size: 20px;
+            color: #007bff;
+        }
+
+        .user-details .username {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .messages-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            max-width: 80%;
+        }
+
+        .message.received {
+            margin-right: auto;
+        }
+
+        .message.sent {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            margin: 0 10px;
+        }
+
+        .message.sent .message-avatar {
+            background-color: #007bff;
+        }
+
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 18px;
+            background-color: #f1f0f0;
+            position: relative;
+        }
+
+        .message.sent .message-content {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .message-text {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            color: #777;
+            text-align: right;
+        }
+
+        .message.sent .message-time {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .message-status {
+            font-size: 0.7em;
+            margin-left: 5px;
+            display: inline-block;
+        }
+        
+        .message.sent .message-status {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .message-status .unread {
+            color: #888;
+        }
+        
+        .message.sent .message-status .unread {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .message-status .read {
+            color: #4CAF50;
+        }
+        
+        .message.sent .message-status .read {
+            color: #8df491;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: none;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .message.sent .message-actions {
+            background-color: rgba(0, 123, 255, 0.9);
+        }
+        
+        .message-content:hover .message-actions {
+            display: flex;
+        }
+        
+        .message-action-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 3px 5px;
+            font-size: 0.9em;
+            color: #333;
+        }
+        
+        .message.sent .message-action-btn {
+            color: white;
+        }
+        
+        .message-action-btn:hover {
+            color: #007bff;
+        }
+        
+        .message.sent .message-action-btn:hover {
+            color: #e9ecef;
+        }
+
+        .message-edited {
+            font-size: 0.7em;
+            font-style: italic;
+            margin-right: 5px;
+        }
+        
+        .message.sent .message-edited {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .message.received .message-edited {
+            color: rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Styles for the edit message modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .edit-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 1em;
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            border: none;
+        }
+        
+        .cancel-btn {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .save-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .message-form {
+            display: flex;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .message-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            outline: none;
+            font-size: 0.95em;
+        }
+
+        .message-input:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        .send-button {
+            margin-left: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background-color: #0069d9;
+        }
+
+        .send-button i {
+            font-size: 1.2em;
+        }
+        
+        /* Book sharing styles */
+        .book-info-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .book-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .book-image {
+            width: 60px;
+            height: auto;
+            max-height: 80px;
+            border-radius: 4px;
+            margin-right: 15px;
+            overflow: hidden;
+        }
+        
+        .book-image img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+        
+        .book-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .book-meta {
+            font-size: 0.9em;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .transfer-button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+        
+        .transfer-button:hover {
+            background-color: #218838;
+        }
+        
+        .system-message {
+            text-align: center;
+            margin: 15px 0;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .system-message span {
+            background-color: #f8f9fa;
+            padding: 5px 15px;
+            border-radius: 15px;
+        }
+        
+        .empty-chat {
+            text-align: center;
+            padding: 40px 0;
+            color: #6c757d;
+        }
+        
+        .empty-chat i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #dee2e6;
+        }
+        
+        .empty-chat h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .empty-chat p {
+            color: #6c757d;
+        }
+        
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .notification {
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease forwards;
+        }
+        
+        .notification i {
+            font-size: 1.2em;
+        }
+        
+        .notification-success {
+            background-color: #28a745;
+        }
+        
+        .notification-error {
+            background-color: #dc3545;
+        }
+        
+        .notification-info {
+            background-color: #17a2b8;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .attached-book {
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        
+        .message.sent .attached-book {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .attached-book a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            padding: 10px;
+        }
+        
+        .attached-book img {
+            width: 50px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        .attached-book-details {
+            flex: 1;
+        }
+        
+        .attached-book-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 0.9em;
+        }
+        
+        .attached-book-author {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+        
+        /* Book selection styles */
+        .share-book-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color 0.2s;
+        }
+        
+        .share-book-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        .books-container {
+            padding: 15px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .books-loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 10px;
+        }
+        
+        .book-card-small {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: white;
+        }
+        
+        .book-card-small:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .book-card-small.selected {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,.25);
+        }
+        
+        .book-img-small {
+            height: 150px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+        
+        .book-img-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .book-info-small {
+            padding: 12px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .book-title-small {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+            line-height: 1.3;
+            max-height: 2.6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .book-author-small {
+            font-size: 0.85em;
+            color: #6c757d;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .no-books-message {
+            text-align: center;
+            padding: 30px;
+            color: #6c757d;
+        }
+        
+        .selected-book {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .selected-book img {
+            width: 45px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .selected-book-info {
+            flex: 1;
+        }
+        
+        .selected-book-title {
+            font-weight: 600;
+            font-size: 0.95em;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        
+        .selected-book-author {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+        
+        .remove-book-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 5px;
+            margin-left: 10px;
+            border-radius: 50%;
+            height: 30px;
+            width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        
+        .remove-book-btn:hover {
+            color: #bd2130;
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .edited-tag {
+            font-size: 0.8em;
+            color: #999;
+            font-style: italic;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="{{ url_for('home') }}">
+                    <i class="fas fa-book-open"></i>
+                    Student Book Exchange
+                </a>
+            </div>
+            <div class="nav-links">
+                {% if 'username' in session %}
+                    <a href="{{ url_for('my_books') }}"><i class="fas fa-book"></i> My Books</a>
+                    <a href="{{ url_for('add_book') }}"><i class="fas fa-plus-circle"></i> Share a Book</a>
+                    <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Favorites</a>
+                    <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
+                    <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="notification-container">
+                {% for category, message in messages %}
+                    <div class="notification notification-{{ category }}">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        <div class="chat-container">
+            <div class="chat-header">
+                <a href="{{ url_for('messages') }}" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="user-info">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="username">{{ receiver.display_name }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="messages-container" id="messages">
+                {% if messages %}
+                    {% for message in messages %}
+                        {% if loop.first or message.created_at.date() != messages[loop.index0-1].created_at.date() %}
+                            <div class="system-message">
+                                <span>{{ message.created_at.strftime('%B %d, %Y') }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="message {% if message.is_mine %}sent{% else %}received{% endif %}">
+                            <div class="message-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="message-content">
+                                {% if message.book_id and message.book_title %}
+                                <div class="attached-book">
+                                    <a href="{{ url_for('book_detail', book_id=message.book_id) }}" target="_blank">
+                                        <img src="{{ message.book_image or url_for('static', filename='images/default_book.png') }}" alt="{{ message.book_title }}">
+                                        <div class="attached-book-details">
+                                            <div class="attached-book-title">{{ message.book_title }}</div>
+                                            <div class="attached-book-author">{{ message.book_author }}</div>
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endif %}
+                                <div class="message-text">{{ message.content }}</div>
+                                {% if message.edited_at %}
+                                    <span class="edited-tag">(edited)</span>
+                                {% endif %}
+                                <div class="message-time">
+                                    {{ message.created_at.strftime('%H:%M') }}
+                                </div>
+                                {% if message.sender_id == session.user_id %}
+                                <span class="message-status">
+                                    {% if message.is_read %}
+                                    <i class="fas fa-check-double read" title="Read"></i>
+                                    {% else %}
+                                    <i class="fas fa-check unread" title="Delivered"></i>
+                                    {% endif %}
+                                </span>
+                                <div class="message-actions">
+                                    <button class="message-action-btn edit-message-btn" data-id="{{ message.id }}" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="message-action-btn delete-message-btn" data-id="{{ message.id }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-chat">
+                        <i class="far fa-comments"></i>
+                        <h3>Start a conversation</h3>
+                        <p>Send a message to start chatting with {{ receiver.display_name }}</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <form action="{{ url_for('chat', receiver_id=receiver.id) }}" method="post" class="message-form" id="message-form">
+                <input type="text" name="message" placeholder="Type your message..." class="message-input" id="message-input" autocomplete="off" required>
+                <input type="hidden" name="book_id" id="selected-book-id" value="">
+                <button type="button" class="share-book-btn" id="share-book-btn" title="Share a book">
+                    <i class="fas fa-book"></i>
+                </button>
+                <button type="submit" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Edit message</h4>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="edit-message-form" class="edit-form">
+                <input type="hidden" id="edit-message-id">
+                <textarea id="edit-message-content" class="edit-input" required></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn cancel-btn" id="cancel-edit">Cancel</button>
+                    <button type="submit" class="modal-btn save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Book selection modal -->
+    <div id="books-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Share a book</h4>
+                <button class="close-modal books-close">&times;</button>
+            </div>
+            <div class="books-container">
+                <div class="books-loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading your books...
+                </div>
+                <div class="books-grid" id="books-grid">
+                    <!-- Books will be loaded here -->
+                </div>
+                <div class="no-books-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>You don't have any books to share.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn cancel-btn books-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Прокрутка чата вниз
+            function scrollToBottom() {
+                let messagesContainer = document.getElementById('messages');
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            scrollToBottom();
+            
+            // Отправка сообщения
+            $('#message-form').submit(function(e) {
+                e.preventDefault();
+                
+                let messageContent = $('#message-input').val().trim();
+                if (messageContent === '') {
+                    return;
+                }
+                
+                $.ajax({
+                    url: '{{ url_for("send_message", chat_id=receiver.id) }}',
+                    type: 'POST',
+                    data: {
+                        content: messageContent,
+                        book_id: $('#selected-book-id').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Очищаем поле ввода
+                            $('#message-input').val('');
+                            
+                            // Очищаем информацию о выбранной книге
+                            $('#selected-book-id').val('');
+                            $('.selected-book').remove();
+                            
+                            // Create message content HTML
+                            let messageHtml = `
+                                <div class="message-text">${response.message.content}</div>
+                                <span class="message-time">${response.message.created_at}</span>
+                                <span class="message-status">
+                                    <i class="fas fa-check unread" title="Delivered"></i>
+                                </span>
+                                <div class="message-actions">
+                                    <button class="message-action-btn edit-message-btn" data-id="${response.message.id}" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="message-action-btn delete-message-btn" data-id="${response.message.id}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                            
+                            // Check if a book was attached to the message
+                            if (response.message.book) {
+                                const book = response.message.book;
+                                let bookHtml = `
+                                    <div class="attached-book">
+                                        <a href="/book/${book.id}" target="_blank">
+                                            <img src="${book.image_path || '/static/images/default_book.png'}" alt="${book.title}">
+                                            <div class="attached-book-details">
+                                                <div class="attached-book-title">${book.title}</div>
+                                                <div class="attached-book-author">${book.author}</div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                `;
+                                messageHtml = bookHtml + messageHtml;
+                            }
+                            
+                            // Create and append the new message element
+                            let newMessage = $(`
+                                <div class="message sent">
+                                    <div class="message-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="message-content">
+                                        ${messageHtml}
+                                    </div>
+                                </div>
+                            `);
+                            
+                            // Append the message and scroll to bottom
+                            $('#messages').append(newMessage);
+                            scrollToBottom();
+                            
+                        } else {
+                            // Show error notification
+                            showNotification(response.error || 'Error sending message', 'error');
+                        }
+                    },
+                    error: function() {
+                        showNotification('Error connecting to server', 'error');
+                    }
+                });
+            });
+
+            // Редактирование сообщения - открытие модального окна
+            $(document).on('click', '.edit-message-btn', function() {
+                let messageId = $(this).data('id');
+                let messageContent = $(this).closest('.message-content').find('.message-text').text().trim();
+                
+                $('#edit-message-id').val(messageId);
+                $('#edit-message-content').val(messageContent);
+                $('#edit-modal').css('display', 'flex');
+            });
+
+            // Закрытие модального окна редактирования
+            $('.close-modal, #cancel-edit').click(function() {
+                $('#edit-modal').css('display', 'none');
+            });
+
+            // Отправка формы редактирования сообщения
+            $('#edit-message-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                let messageId = $('#edit-message-id').val();
+                let messageContent = $('#edit-message-content').val();
+                
+                $.ajax({
+                    url: '/edit_message/' + messageId,
+                    type: 'POST',
+                    data: {
+                        content: messageContent
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#edit-modal').css('display', 'none');
+                            
+                            let messageElement = $(`.edit-message-btn[data-id="${messageId}"]`).closest('.message-content');
+                            messageElement.find('.message-text').text(messageContent);
+                            
+                            if (messageElement.find('.message-edited').length === 0) {
+                                messageElement.find('.message-time').after('<span class="message-edited">(edited)</span>');
+                            }
+                            
+                            showNotification('Message updated', 'success');
+                        }
+                    },
+                    error: function() {
+                        showNotification('Error connecting to server', 'error');
+                    }
+                });
+            });
+
+            // Удаление сообщения
+            $(document).on('click', '.delete-message-btn', function() {
+                if (confirm('Are you sure you want to delete this message?')) {
+                    let messageId = $(this).data('id');
+                    let messageElement = $(this).closest('.message');
+                    
+                    $.ajax({
+                        url: '/delete_message/' + messageId,
+                        type: 'POST',
+                        success: function(response) {
+                            if (response.success) {
+                                messageElement.fadeOut(300, function() {
+                                    $(this).remove();
+                                });
+                            }
+                        },
+                        error: function() {
+                            showNotification('Error connecting to server', 'error');
+                        }
+                    });
+                }
+            });
+
+            // Показ уведомлений
+            function showNotification(message, type) {
+                let notificationClass = 'notification-' + type;
+                let notification = $('<div class="notification ' + notificationClass + '">' + message + '</div>');
+                
+                $('.notification-container').append(notification);
+                
+                setTimeout(function() {
+                    notification.addClass('fade-out');
+                    setTimeout(function() {
+                        notification.remove();
+                    }, 500);
+                }, 3000);
+            }
+
+            // Открытие модального окна выбора книги
+            $('#share-book-btn').click(function() {
+                $('#books-modal').css('display', 'flex');
+                loadUserBooks();
+            });
+            
+            // Закрытие модального окна выбора книги
+            $('.books-close').click(function() {
+                $('#books-modal').css('display', 'none');
+            });
+            
+            // Загрузка книг пользователя
+            function loadUserBooks() {
+                $('.books-loading').show();
+                $('#books-grid').empty();
+                $('.no-books-message').hide();
+                
+                $.ajax({
+                    url: '/get_user_books_json',
+                    type: 'GET',
+                    success: function(response) {
+                        $('.books-loading').hide();
+                        
+                        if (response.books && response.books.length > 0) {
+                            const selectedBookId = $('#selected-book-id').val();
+                            
+                            response.books.forEach(function(book) {
+                                const isSelected = book.id.toString() === selectedBookId;
+                                const bookCard = $(`
+                                    <div class="book-card-small ${isSelected ? 'selected' : ''}" data-id="${book.id}" data-title="${book.title}" data-author="${book.author}" data-image="${book.image_path}">
+                                        <div class="book-img-small">
+                                            <img src="${book.image_path}">
+                                        </div>
+                                        <div class="book-info-small">
+                                            <div class="book-title-small">${book.title}</div>
+                                            <div class="book-author-small">${book.author}</div>
+                                        </div>
+                                    </div>
+                                `);
+                                
+                                bookCard.click(function() {
+                                    $('.book-card-small').removeClass('selected');
+                                    $(this).addClass('selected');
+                                    
+                                    const bookId = $(this).data('id');
+                                    const bookTitle = $(this).data('title');
+                                    const bookAuthor = $(this).data('author');
+                                    const bookImage = $(this).data('image');
+                                    
+                                    $('#selected-book-id').val(bookId);
+                                    $('#books-modal').css('display', 'none');
+                                    
+                                    showNotification(`Book "${bookTitle}" selected`, 'success');
+                                    
+                                    // Отображаем выбранную книгу
+                                    showSelectedBook({
+                                        id: bookId,
+                                        title: bookTitle,
+                                        author: bookAuthor,
+                                        image_path: bookImage
+                                    });
+                                });
+                                
+                                $('#books-grid').append(bookCard);
+                            });
+                        } else {
+                            $('.no-books-message').show();
+                        }
+                    },
+                    error: function() {
+                        $('.books-loading').hide();
+                        $('.no-books-message').show();
+                        showNotification('Error loading books', 'error');
+                    }
+                });
+            }
+            
+            // Функция отображения выбранной книги - упрощенная версия
+            function showSelectedBook(book) {
+                // Remove any existing selected book display
+                $('.selected-book').remove();
+                
+                if (book && book.id) {
+                    // Create elements for displaying the selected book
+                    var bookElement = $('<div class="selected-book"></div>');
+                    var bookImage = $('<img>').attr('src', book.image_path || '/static/images/default_book.png');
+                    var bookInfo = $('<div class="selected-book-info"></div>');
+                    var bookTitle = $('<div class="selected-book-title"></div>').text(book.title);
+                    var bookAuthor = $('<div class="selected-book-author"></div>').text(book.author);
+                    var removeButton = $('<button type="button" class="remove-book-btn" title="Remove book"><i class="fas fa-times"></i></button>');
+                    
+                    // Assemble the book display
+                    bookInfo.append(bookTitle).append(bookAuthor);
+                    bookElement.append(bookImage).append(bookInfo).append(removeButton);
+                    
+                    // Add click handler to the remove button
+                    removeButton.click(function() {
+                        $('#selected-book-id').val('');
+                        bookElement.remove();
+                    });
+                    
+                    // Insert the book display before the message form
+                    $('#message-form').before(bookElement);
+                    $('#selected-book-id').val(book.id);
+                }
+            }
+        });
+    </script>
+
+    <!-- Контейнер для уведомлений -->
+    <div class="notification-container"></div>
+</body>
+</html> 

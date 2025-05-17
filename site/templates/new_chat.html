@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='messages.js') }}"></script>
+    <title>New Chat - Student Book Exchange</title>
+    <style>
+        .users-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-filter input, .search-filter select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .user-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .user-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            align-self: center;
+        }
+
+        .user-avatar i {
+            font-size: 30px;
+            color: #666;
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .user-university {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .user-action {
+            margin-top: auto;
+        }
+
+        .btn-chat {
+            width: 100%;
+            padding: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-chat:hover {
+            background-color: #45a049;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .notification {
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .notification i {
+            font-size: 1.2em;
+        }
+
+        .notification-success {
+            background-color: #28a745;
+        }
+
+        .notification-error {
+            background-color: #dc3545;
+        }
+
+        .notification-info {
+            background-color: #17a2b8;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .notification.fade-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Hide footer on messages page */
+        footer, 
+        .footer-content, 
+        .footer-section, 
+        .footer-bottom {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="{{ url_for('home') }}">
+                    <i class="fas fa-book-open"></i>
+                    Student Book Exchange
+                </a>
+            </div>
+            <div class="nav-links">
+                {% if 'username' in session %}
+                    <a href="{{ url_for('my_books') }}"><i class="fas fa-book"></i> My Books</a>
+                    <a href="{{ url_for('add_book') }}"><i class="fas fa-plus-circle"></i> Share a Book</a>
+                    <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Favorites</a>
+                    <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
+                    <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <!-- Add notification section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="notification-container">
+                {% for category, message in messages %}
+                    <div class="notification notification-{{ category }}">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        <div class="users-container">
+            <div class="section-header">
+                <h1><i class="fas fa-comments"></i> Start a New Chat</h1>
+                <div class="actions">
+                    <a href="{{ url_for('messages') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Messages
+                    </a>
+                </div>
+            </div>
+            
+            <div class="search-filter">
+                <input type="text" id="search-user" placeholder="Search users..." onkeyup="filterUsers()">
+                <select id="filter-university" onchange="filterUsers()">
+                    <option value="">All Universities</option>
+                    {% set universities = [] %}
+                    {% for user in users %}
+                        {% if user.university and user.university not in universities %}
+                            {% set _ = universities.append(user.university) %}
+                            <option value="{{ user.university }}">{{ user.university }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="user-list" id="user-list">
+                {% if users %}
+                    {% for user in users %}
+                        <div class="user-card" data-username="{{ user.username }}" data-university="{{ user.university }}">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-name">{{ user.display_name }}</div>
+                            <div class="user-university">{{ user.university }}</div>
+                            <div class="user-action">
+                                <a href="{{ url_for('start_chat', receiver_id=user.id) }}" class="btn-chat">
+                                    <i class="fas fa-comment"></i> Start Chat
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-results">
+                        <i class="fas fa-users fa-3x"></i>
+                        <h3>No users found</h3>
+                        <p>There are no other users registered in the system yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function filterUsers() {
+            const searchTerm = document.getElementById('search-user').value.toLowerCase();
+            const universityFilter = document.getElementById('filter-university').value.toLowerCase();
+            const userCards = document.querySelectorAll('.user-card');
+            let visibleCount = 0;
+            
+            userCards.forEach(card => {
+                const username = card.getAttribute('data-username').toLowerCase();
+                const university = card.getAttribute('data-university').toLowerCase();
+                
+                const matchesSearch = username.includes(searchTerm);
+                const matchesUniversity = !universityFilter || university === universityFilter;
+                
+                if (matchesSearch && matchesUniversity) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show "no results" message if no users match the filters
+            const noResults = document.querySelector('.no-results');
+            if (userCards.length > 0 && visibleCount === 0) {
+                if (!noResults) {
+                    const noResultsElem = document.createElement('div');
+                    noResultsElem.className = 'no-results';
+                    noResultsElem.innerHTML = `
+                        <i class="fas fa-search fa-3x"></i>
+                        <h3>No users match your search</h3>
+                        <p>Try adjusting your search criteria</p>
+                    `;
+                    document.getElementById('user-list').appendChild(noResultsElem);
+                }
+            } else {
+                const existingNoResults = document.querySelector('.no-results');
+                if (existingNoResults && userCards.length > 0) {
+                    existingNoResults.remove();
+                }
+            }
+        }
+
+        // Auto-hide notifications after 3 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach(notification => {
+                setTimeout(() => {
+                    notification.classList.add('fade-out');
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html> 

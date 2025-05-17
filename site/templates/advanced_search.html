@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Advanced Search - Student Book Exchange</title>
+</head>
+<body>
+    <header>
+        <!-- Include the same navigation as home.html -->
+        <nav>
+            <div class="logo">
+                <a href="{{ url_for('home') }}">
+                    <i class="fas fa-book-open"></i>
+                    Student Book Exchange
+                </a>
+            </div>
+            <div class="nav-links">
+                {% if 'username' in session %}
+                    <a href="{{ url_for('my_books') }}"><i class="fas fa-book"></i> My Books</a>
+                    <a href="{{ url_for('add_book') }}"><i class="fas fa-plus-circle"></i> Share a Book</a>
+                    <a href="{{ url_for('my_borrowings') }}"><i class="fas fa-hand-holding"></i> My Borrowings</a>
+                    <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Favorites</a>
+                    <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}"><i class="fas fa-sign-in-alt"></i> Sign In/Register</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="advanced-search-section">
+            <div class="section-header">
+                <h1>Advanced Search</h1>
+            </div>
+            
+            <div class="form-container">
+                <form method="POST" action="{{ url_for('search') }}" class="advanced-search-form">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="form-group">
+                        <label for="query">Search Term</label>
+                        {{ form.query(class="form-control", placeholder="Enter keywords, title, or ISBN") }}
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            {{ form.category(class="form-control") }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="author">Author</label>
+                            {{ form.author(class="form-control", placeholder="Author name") }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="condition">Minimum Condition</label>
+                            {{ form.condition(class="form-control") }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="available_only">Availability</label>
+                            {{ form.available_only(class="form-control") }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sort_by">Sort Results By</label>
+                        {{ form.sort_by(class="form-control") }}
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <!-- Include the same footer as home.html -->
+    </footer>
+</body>
+</html> 

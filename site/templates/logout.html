@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Logout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #000000;
+        }
+
+        section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Logout</h1>
+    </header>
+    <section>
+        <p>Are you sure you want to logout?</p>
+        <form action="{{ url_for('perform_logout') }}" method="post">
+            <button type="submit">Yes</button>
+            <button type="button" onclick="stayLoggedIn()">No</button>
+            <input type="hidden" name="choice" id="choice" value="yes">
+        </form>
+        <script>
+            function stayLoggedIn() {
+                // Set the choice input to 'no' and submit the form
+                document.getElementById('choice').value = 'no';
+                document.forms[0].submit();
+            }
+        </script>                       
+    <footer>
+    </footer>
+</body>
+</html>

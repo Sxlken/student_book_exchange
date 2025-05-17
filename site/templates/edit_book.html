@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Edit Book - Student Book Exchange</title>
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .form-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-header h2 i {
+            color: #007bff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .text-danger {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .current-image {
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+
+        .current-image img {
+            max-width: 200px;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .form-control-file {
+            padding: 10px 0;
+        }
+
+        .help-text {
+            color: #6c757d;
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+
+        /* Notification Styles */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .notification {
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .notification i {
+            font-size: 1.2em;
+        }
+
+        .notification-success {
+            background-color: #28a745;
+        }
+
+        .notification-error {
+            background-color: #dc3545;
+        }
+
+        .notification-info {
+            background-color: #17a2b8;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .notification.fade-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="{{ url_for('home') }}">
+                    <i class="fas fa-book-open"></i>
+                    Student Book Exchange
+                </a>
+            </div>
+            <div class="nav-links">
+                {% if 'username' in session %}
+                    <a href="{{ url_for('my_books') }}"><i class="fas fa-book"></i> My Books</a>
+                    <a href="{{ url_for('add_book') }}"><i class="fas fa-plus-circle"></i> Share a Book</a>
+                    <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Favorites</a>
+                    <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
+                    <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="notification-container">
+                    {% for category, message in messages %}
+                        <div class="notification notification-{{ category }}">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif category == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <div class="form-header">
+                <h2><i class="fas fa-edit"></i> Edit Book</h2>
+                <p>Update your book's information below.</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="form-group">
+                    {{ form.title.label }}
+                    {{ form.title(class="form-control") }}
+                    {% if form.title.errors %}
+                        {% for error in form.title.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.publisher.label }}
+                    {{ form.publisher(class="form-control", readonly=true, style="background-color: #f4f4f4;") }}
+                    <small class="text-muted">Your display name is used as the publisher name.</small>
+                    {% if form.publisher.errors %}
+                        {% for error in form.publisher.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.author.label }}
+                    {{ form.author(class="form-control") }}
+                    {% if form.author.errors %}
+                        {% for error in form.author.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.description.label }}
+                    {{ form.description(class="form-control") }}
+                    {% if form.description.errors %}
+                        {% for error in form.description.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.category.label }}
+                    {{ form.category(class="form-control") }}
+                    {% if form.category.errors %}
+                        {% for error in form.category.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.condition.label }}
+                    {{ form.condition(class="form-control") }}
+                    {% if form.condition.errors %}
+                        {% for error in form.condition.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.isbn.label }}
+                    {{ form.isbn(class="form-control", placeholder="Optional") }}
+                    {% if form.isbn.errors %}
+                        {% for error in form.isbn.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.publication_year.label }}
+                    {{ form.publication_year(class="form-control", placeholder="Optional") }}
+                    {% if form.publication_year.errors %}
+                        {% for error in form.publication_year.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label for="image">Book Cover Image (optional)</label>
+                    <input type="file" class="form-control-file" id="image" name="image" accept="image/*" onchange="previewImage(this)">
+                    {% if book.image_path %}
+                    <p class="mt-2">Current image: {{ book.image_path }}</p>
+                    <img src="{{ book.image_path }}" id="image-preview" alt="Current book cover" class="img-thumbnail mt-2" style="max-width: 200px;">
+                    {% else %}
+                    <img id="image-preview" alt="Image preview" class="img-thumbnail mt-2" style="max-width: 200px; display: none;">
+                    {% endif %}
+                    {% if form.image.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.image.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- PDF File Upload -->
+                <div class="form-group">
+                    <label for="pdf_file">Book PDF File (optional)</label>
+                    <input type="file" class="form-control-file" id="pdf_file" name="pdf_file" accept=".pdf" onchange="displayFileName(this, 'pdf-file-name')">
+                    <div id="pdf-file-name" class="mt-2"></div>
+                    {% if book.pdf_path %}
+                    <p class="mt-2">Current PDF: {{ book.pdf_path }}</p>
+                    {% endif %}
+                    {% if form.pdf_file.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.pdf_file.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if book['image_path'] %}
+                <div class="current-image">
+                    <p>Current cover image:</p>
+                    <img src="{{ url_for('static', filename=book['image_path']) }}" alt="Current book cover">
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Book
+                    </button>
+                    <a href="{{ url_for('book_detail', book_id=book['id']) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About Us</h3>
+                <p>Student Book Exchange is a platform for students to share and exchange books within their university community.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                    <li><a href="{{ url_for('how_it_works') }}">How It Works</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p><i class="fab fa-telegram-plane"></i> @prime_e1ght</p>
+                <p><a href="https://github.com/Sxlken" target="_blank"><i class="fab fa-github"></i> Sxlken</a></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Student Book Exchange. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all notifications
+            const notifications = document.querySelectorAll('.notification');
+            
+            // Function to remove a notification
+            function removeNotification(notification) {
+                notification.classList.add('fade-out');
+                setTimeout(() => {
+                    notification.remove();
+                }, 500);
+            }
+            
+            // Auto-hide each notification after 3 seconds
+            notifications.forEach(notification => {
+                setTimeout(() => {
+                    removeNotification(notification);
+                }, 3000);
+            });
+            
+            // Add event listener for form submission
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function() {
+                // Clear any existing notifications
+                const existingNotifications = document.querySelectorAll('.notification');
+                existingNotifications.forEach(notification => {
+                    notification.remove();
+                });
+            });
+        });
+
+        // Function to preview image before upload
+        function previewImage(input) {
+            const preview = document.getElementById('image-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Function to display file name
+        function displayFileName(input, targetId) {
+            const fileName = input.files[0] ? input.files[0].name : 'No file selected';
+            const targetElement = document.getElementById(targetId);
+            targetElement.textContent = fileName;
+        }
+    </script>
+</body>
+</html> 

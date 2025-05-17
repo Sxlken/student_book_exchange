@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='messages.js') }}"></script>
+    <title>{{ username }}'s Account - Student Book Exchange</title>
+    <style>
+        .account-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .account-header {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .account-header h2 {
+            color: #333;
+            margin: 0;
+        }
+
+        .account-info {
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .info-label {
+            width: 120px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+
+        .edit-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .save-btn {
+            background-color: #28a745;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .save-btn:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .delete-account-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .delete-account-section h3 {
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+
+        .warning-text {
+            color: #dc3545;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        #delete-confirmation {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        #delete-confirmation h4 {
+            color: #721c24;
+            margin-top: 0;
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .notification {
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .notification i {
+            font-size: 1.2em;
+        }
+
+        .notification-success {
+            background-color: #28a745;
+        }
+
+        .notification-error {
+            background-color: #dc3545;
+        }
+
+        .notification-info {
+            background-color: #17a2b8;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .notification.fade-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="{{ url_for('home') }}">
+                    <i class="fas fa-book-open"></i>
+                    Student Book Exchange
+                </a>
+            </div>
+            <div class="nav-links">
+                {% if 'username' in session %}
+                    <a href="{{ url_for('my_books') }}"><i class="fas fa-book"></i> My Books</a>
+                    <a href="{{ url_for('add_book') }}"><i class="fas fa-plus-circle"></i> Share a Book</a>
+                    <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Favorites</a>
+                    <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
+                    <a href="{{ url_for('account') }}" class="active"><i class="fas fa-user"></i> Account</a>
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="account-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="notification-container">
+                        {% for category, message in messages %}
+                            <div class="notification notification-{{ category }}">
+                                {% if category == 'success' %}
+                                    <i class="fas fa-check-circle"></i>
+                                {% elif category == 'error' %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle"></i>
+                                {% endif %}
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <div class="account-header">
+                <h2>{{ display_name }}'s Account</h2>
+            </div>
+            <div class="account-info">
+                <form id="user-info-form" action="{{ url_for('update_user_info') }}" method="POST">
+                    <div class="info-item">
+                        <span class="info-label">Nickname:</span>
+                        <input type="text" name="display_name" value="{{ display_name }}" class="form-control" required readonly>
+                        <button type="button" class="btn edit-btn" onclick="toggleEdit(this)">Edit</button>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Login Name:</span>
+                        <input type="text" value="{{ username }}" class="form-control" readonly disabled>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email:</span>
+                        <input type="email" name="email" value="{{ email }}" class="form-control" required readonly>
+                        <button type="button" class="btn edit-btn" onclick="toggleEdit(this)">Edit</button>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Password:</span>
+                        <div class="password-fields" style="display: none; width: 60%;">
+                            <input type="password" name="current_password" placeholder="Current Password" class="form-control" style="margin-bottom: 10px;">
+                            <input type="password" name="new_password" placeholder="New Password" class="form-control" style="margin-bottom: 10px;">
+                            <input type="password" name="confirm_password" placeholder="Confirm Password" class="form-control">
+                        </div>
+                        <button type="button" class="btn edit-btn" onclick="togglePasswordEdit(this)">Change Password</button>
+                    </div>
+                    <button type="submit" class="btn save-btn" style="display:none;">Save Changes</button>
+                </form>
+                
+                <div class="delete-account-section">
+                    <h3>Delete Account</h3>
+                    <p class="warning-text">Warning: Deleting your account is permanent and cannot be undone. All your books, reviews, and messages will be permanently removed.</p>
+                    <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation()">Delete Account</button>
+                    
+                    <div id="delete-confirmation" style="display: none; margin-top: 20px; padding: 15px; background-color: #f8d7da; border-radius: 5px; border: 1px solid #f5c6cb;">
+                        <h4>Confirm Deletion</h4>
+                        <p>Enter your password to confirm account deletion:</p>
+                        <form action="{{ url_for('delete_account') }}" method="POST">
+                            <div style="margin-bottom: 15px;">
+                                <input type="password" name="password" class="form-control" placeholder="Password" required>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Permanently Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About Us</h3>
+                <p>Student Book Exchange is a platform for students to share and exchange books within their university community.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                    <li><a href="{{ url_for('how_it_works') }}">How It Works</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p><i class="fab fa-telegram-plane"></i> @prime_e1ght</p>
+                <p><a href="https://github.com/Sxlken" target="_blank"><i class="fab fa-github"></i> Sxlken</a></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Student Book Exchange. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Function to toggle edit mode for input fields
+        function toggleEdit(button) {
+            const inputField = button.previousElementSibling;
+            
+            if (inputField.hasAttribute('readonly')) {
+                // Enable editing
+                inputField.removeAttribute('readonly');
+                inputField.style.backgroundColor = 'white';
+                inputField.focus();
+                button.textContent = 'Cancel';
+                
+                // Show save button
+                document.querySelector('.save-btn').style.display = 'block';
+            } else {
+                // Disable editing
+                inputField.setAttribute('readonly', true);
+                inputField.style.backgroundColor = '#f8f9fa';
+                button.textContent = 'Edit';
+                
+                // Check if any other fields are being edited
+                const editingFields = document.querySelectorAll('input:not([readonly])');
+                const passwordFieldVisible = document.querySelector('.password-fields').style.display !== 'none';
+                
+                if (editingFields.length === 0 && !passwordFieldVisible) {
+                    document.querySelector('.save-btn').style.display = 'none';
+                }
+            }
+        }
+        
+        // Function to toggle password edit fields
+        function togglePasswordEdit(button) {
+            const passwordFields = document.querySelector('.password-fields');
+            
+            if (passwordFields.style.display === 'none') {
+                // Show password fields
+                passwordFields.style.display = 'block';
+                button.textContent = 'Cancel';
+                
+                // Show save button
+                document.querySelector('.save-btn').style.display = 'block';
+            } else {
+                // Hide password fields
+                passwordFields.style.display = 'none';
+                button.textContent = 'Change Password';
+                
+                // Clear password fields
+                passwordFields.querySelectorAll('input').forEach(input => {
+                    input.value = '';
+                });
+                
+                // Check if any other fields are being edited
+                const editingFields = document.querySelectorAll('input:not([readonly]):not([type="password"])');
+                if (editingFields.length === 0) {
+                    document.querySelector('.save-btn').style.display = 'none';
+                }
+            }
+        }
+        
+        // Function to show delete account confirmation
+        function showDeleteConfirmation() {
+            document.getElementById('delete-confirmation').style.display = 'block';
+        }
+        
+        // Function to hide delete account confirmation
+        function hideDeleteConfirmation() {
+            document.getElementById('delete-confirmation').style.display = 'none';
+        }
+        
+        // Auto-hide notifications after 3 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach(notification => {
+                setTimeout(() => {
+                    notification.classList.add('fade-out');
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
