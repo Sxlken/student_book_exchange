@@ -46,8 +46,7 @@ Electronic Library is a Flask-based web application designed to facilitate book 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/electronic-library.git
-   cd electronic-library
+[   git clone https://github.com/yourusername/electronic-library.git](https://github.com/Sxlken/student_book_exchange.git)
    ```
 
 2. Create and activate a virtual environment:
