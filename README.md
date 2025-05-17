@@ -59,10 +59,12 @@ Electronic Library is a Flask-based web application designed to facilitate book 
    source venv/bin/activate
    ```
 
-3. Install dependencies
-
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
    
-4. Configure PostgreSQL:
+5. Configure PostgreSQL:
    - Create a database named `student_library`
    - Update database connection details in `site/app.py`:
      ```python
