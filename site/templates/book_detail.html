@@ -484,6 +484,11 @@
             font-style: italic;
             margin-left: 5px;
         }
+
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -756,7 +761,7 @@
                                             <textarea name="comment" id="edit-comment-{{ review.id }}" rows="4" required>{{ review.comment }}</textarea>
                                         </div>
                                         <div class="form-actions">
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                            <button type="submit" class="btn btn-primary btn-disabled" disabled>Save Changes</button>
                                             <button type="button" class="btn btn-secondary cancel-edit">Cancel</button>
                                         </div>
                                     </form>
@@ -1053,7 +1058,7 @@
                                         <textarea name="comment" id="edit-comment-${review.id}" rows="4" required>${review.comment}</textarea>
                                     </div>
                                     <div class="form-actions">
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        <button type="submit" class="btn btn-primary btn-disabled" disabled>Save Changes</button>
                                         <button type="button" class="btn btn-secondary cancel-edit">Cancel</button>
                                     </div>
                                 </form>
@@ -1075,34 +1080,81 @@
             // Re-attach event listeners
             attachEditReviewHandlers();
             attachDeleteReviewHandlers();
+            
+            // Setup change detection for any newly created forms
+            setupEditFormChangeDetection();
         }
         
+        // Add event listeners to detect changes in the edit form
+        function setupEditFormChangeDetection() {
+            document.querySelectorAll('.review-edit-form').forEach(form => {
+                const reviewId = form.dataset.reviewId;
+                const saveButton = form.querySelector('button[type="submit"]');
+                const originalRating = form.querySelector('input[name="rating"]:checked')?.value || '';
+                const originalComment = form.querySelector('textarea[name="comment"]').value;
+                
+                // Initially disable the save button
+                saveButton.disabled = true;
+                saveButton.classList.add('btn-disabled');
+                
+                // Function to check if form has been changed
+                function checkFormChanged() {
+                    const currentRating = form.querySelector('input[name="rating"]:checked')?.value || '';
+                    const currentComment = form.querySelector('textarea[name="comment"]').value;
+                    
+                    const hasChanged = (currentRating !== originalRating || currentComment !== originalComment);
+                    
+                    // Enable/disable button based on whether changes were made
+                    saveButton.disabled = !hasChanged;
+                    if (hasChanged) {
+                        saveButton.classList.remove('btn-disabled');
+                    } else {
+                        saveButton.classList.add('btn-disabled');
+                    }
+                }
+                
+                // Add input event listeners to all form fields
+                form.querySelectorAll('input[name="rating"]').forEach(radio => {
+                    radio.addEventListener('change', checkFormChanged);
+                });
+                
+                form.querySelector('textarea[name="comment"]').addEventListener('input', checkFormChanged);
+            });
+        }
+
+        // Call this function after the review form is displayed
         function attachEditReviewHandlers() {
-            // Attach event listeners for edit buttons
             document.querySelectorAll('.btn-edit-review').forEach(button => {
                 button.addEventListener('click', function() {
                     const reviewId = this.dataset.reviewId;
+                    const reviewForm = document.getElementById(`edit-review-form-${reviewId}`);
+                    
+                    // Hide all other edit forms
                     document.querySelectorAll('.edit-review-form').forEach(form => {
-                        form.style.display = 'none';
+                        if (form.id !== `edit-review-form-${reviewId}`) {
+                            form.style.display = 'none';
+                        }
                     });
-                    const editForm = document.getElementById(`edit-review-form-${reviewId}`);
-                    if (editForm) {
-                        editForm.style.display = 'block';
+                    
+                    // Toggle current form
+                    if (reviewForm.style.display === 'none' || reviewForm.style.display === '') {
+                        reviewForm.style.display = 'block';
+                        setupEditFormChangeDetection(); // Set up change detection when form is shown
+                    } else {
+                        reviewForm.style.display = 'none';
                     }
                 });
             });
             
-            // Attach event listeners for cancel buttons
+            // Cancel button handlers
             document.querySelectorAll('.cancel-edit').forEach(button => {
-                button.addEventListener('click', function() {
-                    const form = this.closest('.edit-review-form');
-                    if (form) {
-                        form.style.display = 'none';
-                    }
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.closest('.edit-review-form').style.display = 'none';
                 });
             });
             
-            // Attach event listeners for the edit review forms
+            // Form submission handlers
             document.querySelectorAll('.review-edit-form').forEach(form => {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -1111,13 +1163,8 @@
                     const rating = this.querySelector('input[name="rating"]:checked')?.value;
                     const comment = this.querySelector('textarea[name="comment"]').value;
                     
-                    if (!rating) {
-                        showNotification('Please select a rating', 'error');
-                        return;
-                    }
-                    
-                    if (!comment.trim()) {
-                        showNotification('Please enter a comment', 'error');
+                    if (!rating || !comment.trim()) {
+                        alert('Please provide both a rating and a comment.');
                         return;
                     }
                     
@@ -1132,24 +1179,21 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Server responded with status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            this.closest('.edit-review-form').style.display = 'none';
-                            showNotification(data.message, 'success');
+                            // Show success notification
+                            showNotification(data.message || 'Your review has been updated', 'success');
+                            
+                            // Update the reviews list with the updated reviews
                             updateReviewsList(data.reviews);
                         } else {
-                            showNotification(data.message || 'Error updating review', 'error');
+                            showNotification(data.message || 'An error occurred while editing your review', 'error');
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
-                        showNotification(`Error updating review: ${error.message}`, 'error');
+                        console.error('Error editing review:', error);
+                        showNotification('An error occurred while editing your review', 'error');
                     });
                 });
             });
