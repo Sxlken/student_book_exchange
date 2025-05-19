@@ -77,4 +77,5 @@ Electronic Library is a Flask-based web application designed to facilitate book 
    flask run
    ```
 
-6. Done!
+6. Open http://localhost:5000 in your browser.
+   
