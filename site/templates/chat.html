@@ -83,28 +83,32 @@
         .messages-container {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 15px 0;
+            padding: 15px;
             margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
         }
 
         .message {
             display: flex;
             margin-bottom: 15px;
-            max-width: 80%;
+            max-width: 85%;
+            position: relative;
         }
 
         .message.received {
             margin-right: auto;
+            align-self: flex-start;
         }
 
         .message.sent {
             margin-left: auto;
-            flex-direction: row-reverse;
+            align-self: flex-end;
         }
 
         .message-avatar {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-color: #6c757d;
             color: white;
@@ -112,66 +116,106 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2em;
-            margin: 0 10px;
+            margin-right: 8px;
+            flex-shrink: 0;
         }
 
         .message.sent .message-avatar {
             background-color: #007bff;
+            order: 1;
+            margin-right: 0;
+            margin-left: 8px;
         }
 
         .message-content {
-            padding: 10px 15px;
-            border-radius: 18px;
+            padding: 8px 12px;
+            border-radius: 16px;
             background-color: #f1f0f0;
             position: relative;
+            max-width: calc(100% - 44px);
+            min-width: 40px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            display: inline-block;
         }
 
         .message.sent .message-content {
-            background-color: #007bff;
-            color: white;
+            background-color: #e3f2fd;
+            color: #000;
         }
 
         .message-text {
-            margin-bottom: 5px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            margin-bottom: 4px;
             line-height: 1.4;
         }
 
         .message-time {
-            font-size: 0.8em;
-            color: #777;
+            font-size: 0.75em;
+            color: #9e9e9e;
             text-align: right;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .message.sent .message-time {
-            color: rgba(255, 255, 255, 0.8);
+            color: #78909c;
         }
 
         .message-status {
-            font-size: 0.7em;
-            margin-left: 5px;
-            display: inline-block;
-        }
-        
-        .message.sent .message-status {
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .message-status .unread {
-            color: #888;
-        }
-        
-        .message.sent .message-status .unread {
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .message-status .read {
-            color: #4CAF50;
-        }
-        
-        .message.sent .message-status .read {
-            color: #8df491;
+            margin-left: 4px;
+            display: inline-flex;
         }
 
+        .message.sent .message-status .unread {
+            color: #78909c;
+        }
+
+        .message.sent .message-status .read {
+            color: #4CAF50;
+        }
+
+        /* Telegram-style bubble tail */
+        .message.received .message-content:before {
+            content: "";
+            position: absolute;
+            left: -6px;
+            top: 10px;
+            width: 12px;
+            height: 12px;
+            background-color: #f1f0f0;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        .message.sent .message-content:before {
+            content: "";
+            position: absolute;
+            right: -6px;
+            top: 10px;
+            width: 12px;
+            height: 12px;
+            background-color: #e3f2fd;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        /* Adjustments for attachments */
+        .attached-book {
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            max-width: 250px;
+        }
+
+        .message.sent .attached-book {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Message actions updates */
         .message-actions {
             position: absolute;
             top: 0;
@@ -182,34 +226,26 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             z-index: 10;
         }
-        
+
         .message.sent .message-actions {
-            background-color: rgba(0, 123, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.9);
         }
-        
-        .message-content:hover .message-actions {
-            display: flex;
-        }
-        
-        .message-action-btn {
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            padding: 3px 5px;
-            font-size: 0.9em;
-            color: #333;
-        }
-        
-        .message.sent .message-action-btn {
-            color: white;
-        }
-        
-        .message-action-btn:hover {
-            color: #007bff;
-        }
-        
-        .message.sent .message-action-btn:hover {
-            color: #e9ecef;
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 576px) {
+            .message {
+                max-width: 90%;
+            }
+            
+            .message-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 1em;
+            }
+            
+            .message-content {
+                max-width: calc(100% - 38px);
+            }
         }
 
         .message-edited {
