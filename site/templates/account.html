@@ -116,8 +116,10 @@
 
         .delete-account-section {
             margin-top: 40px;
-            padding-top: 20px;
+            padding: 20px;
             border-top: 1px solid #eee;
+            background-color: #ffebee;
+            border-radius: 8px;
         }
 
         .delete-account-section h3 {
@@ -204,6 +206,168 @@
         .notification.fade-out {
             animation: fadeOut 0.5s ease forwards;
         }
+
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .save-btn.btn-disabled {
+            background-color: #5e5e5e;
+            opacity: 0.5;
+        }
+
+        .save-btn:hover:not(.btn-disabled) {
+            background-color: #003486;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: background-color 0.3s ease, backdrop-filter 0.3s ease, opacity 0.3s ease;
+        }
+
+        .modal.active {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: #121212;
+            color: white;
+            width: 90%;
+            max-width: 480px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-header {
+            position: relative;
+            padding: 1.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-body p {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .password-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .password-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .password-field input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #2a2a2a;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .password-field input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(75, 75, 255, 0.5);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #6c757d;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .btn-delete {
+            background-color: #6f4de3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-delete:hover {
+            background-color: #5a3fd8;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #6f4de3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover:not(.btn-disabled) {
+            background-color: #5a3fd8;
+        }
+
+        .btn-primary.btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -272,12 +436,15 @@
                     </div>
                     <div class="info-item">
                         <span class="info-label">Password:</span>
-                        <div class="password-fields" style="display: none; width: 60%;">
-                            <input type="password" name="current_password" placeholder="Current Password" class="form-control" style="margin-bottom: 10px;">
-                            <input type="password" name="new_password" placeholder="New Password" class="form-control" style="margin-bottom: 10px;">
-                            <input type="password" name="confirm_password" placeholder="Confirm Password" class="form-control">
-                        </div>
+                        <input type="text" value="••••••••" class="form-control" readonly disabled>
                         <button type="button" class="btn edit-btn" onclick="togglePasswordEdit(this)">Change Password</button>
+                        
+                        <!-- Hidden password fields that will store the values for form submission -->
+                        <div style="display: none;">
+                            <input type="hidden" name="current_password">
+                            <input type="hidden" name="new_password">
+                            <input type="hidden" name="confirm_password">
+                        </div>
                     </div>
                     <button type="submit" class="btn save-btn" style="display:none;">Save Changes</button>
                 </form>
@@ -285,21 +452,59 @@
                 <div class="delete-account-section">
                     <h3>Delete Account</h3>
                     <p class="warning-text">Warning: Deleting your account is permanent and cannot be undone. All your books, reviews, and messages will be permanently removed.</p>
-                    <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation()">Delete Account</button>
-                    
-                    <div id="delete-confirmation" style="display: none; margin-top: 20px; padding: 15px; background-color: #f8d7da; border-radius: 5px; border: 1px solid #f5c6cb;">
-                        <h4>Confirm Deletion</h4>
-                        <p>Enter your password to confirm account deletion:</p>
-                        <form action="{{ url_for('delete_account') }}" method="POST">
-                            <div style="margin-bottom: 15px;">
-                                <input type="password" name="password" class="form-control" placeholder="Password" required>
-                            </div>
-                            <div>
-                                <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">Cancel</button>
-                                <button type="submit" class="btn btn-danger">Permanently Delete</button>
-                            </div>
-                        </form>
-                    </div>
+                    <button type="button" class="btn btn-danger" onclick="openDeleteModal()">Delete Account</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="delete-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Delete Account</h2>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure that you want to delete your account?<br>
+                    This will immediately log you out of your account and you will not be able to log in again.</p>
+                    <form id="delete-account-form" action="{{ url_for('delete_account') }}" method="POST">
+                        <div class="password-field">
+                            <label for="delete-password">Password</label>
+                            <input type="password" id="delete-password" name="password" required>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                            <button type="submit" class="btn btn-delete">Delete Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="password-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Update your password</h2>
+                    <button type="button" class="close-btn" onclick="closePasswordModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter your current password and a new password.</p>
+                    <form id="password-form" onsubmit="event.preventDefault(); submitPasswordForm();">
+                        <div class="password-field">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" required>
+                        </div>
+                        <div class="password-field">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" required>
+                        </div>
+                        <div class="password-field">
+                            <label for="confirm-password">Confirm New Password</label>
+                            <input type="password" id="confirm-password" required>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                            <button type="submit" id="password-done-btn" class="btn btn-primary btn-disabled" disabled>Done</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -338,64 +543,111 @@
                 // Enable editing
                 inputField.removeAttribute('readonly');
                 inputField.style.backgroundColor = 'white';
-                inputField.focus();
                 button.textContent = 'Cancel';
+                inputField.dataset.originalValue = inputField.value; // Store original value
+                inputField.focus();
                 
-                // Show save button
-                document.querySelector('.save-btn').style.display = 'block';
+                // Show save button (initially disabled)
+                const saveBtn = document.querySelector('.save-btn');
+                saveBtn.style.display = 'block';
+                checkFormChanged(); // Check if any fields are changed
             } else {
                 // Disable editing
                 inputField.setAttribute('readonly', true);
                 inputField.style.backgroundColor = '#f8f9fa';
                 button.textContent = 'Edit';
                 
+                // Restore original value when canceling
+                if (inputField.dataset.originalValue) {
+                    inputField.value = inputField.dataset.originalValue;
+                }
+                
                 // Check if any other fields are being edited
-                const editingFields = document.querySelectorAll('input:not([readonly])');
+                const editingFields = document.querySelectorAll('input:not([readonly]):not([type="password"])');
                 const passwordFieldVisible = document.querySelector('.password-fields').style.display !== 'none';
                 
                 if (editingFields.length === 0 && !passwordFieldVisible) {
                     document.querySelector('.save-btn').style.display = 'none';
                 }
             }
+            
+            // Re-check form state
+            checkFormChanged();
         }
         
         // Function to toggle password edit fields
         function togglePasswordEdit(button) {
-            const passwordFields = document.querySelector('.password-fields');
+            // Open the password change modal instead of showing inline fields
+            openPasswordModal();
+        }
+        
+        // Add a function to check if any form fields have been changed
+        function checkFormChanged() {
+            const saveBtn = document.querySelector('.save-btn');
+            if (!saveBtn) return;
             
-            if (passwordFields.style.display === 'none') {
-                // Show password fields
-                passwordFields.style.display = 'block';
-                button.textContent = 'Cancel';
-                
-                // Show save button
-                document.querySelector('.save-btn').style.display = 'block';
-            } else {
-                // Hide password fields
-                passwordFields.style.display = 'none';
-                button.textContent = 'Change Password';
-                
-                // Clear password fields
-                passwordFields.querySelectorAll('input').forEach(input => {
-                    input.value = '';
-                });
-                
-                // Check if any other fields are being edited
-                const editingFields = document.querySelectorAll('input:not([readonly]):not([type="password"])');
-                if (editingFields.length === 0) {
-                    document.querySelector('.save-btn').style.display = 'none';
+            let hasChanges = false;
+            
+            // Check text inputs that are in edit mode
+            document.querySelectorAll('input:not([readonly]):not([type="password"])').forEach(input => {
+                if (input.dataset.originalValue && input.value !== input.dataset.originalValue) {
+                    hasChanges = true;
                 }
+            });
+            
+            // Check password fields if they're visible
+            const passwordFields = document.querySelector('.password-fields');
+            if (passwordFields && passwordFields.style.display !== 'none') {
+                const currentPassword = passwordFields.querySelector('input[name="current_password"]').value;
+                const newPassword = passwordFields.querySelector('input[name="new_password"]').value;
+                const confirmPassword = passwordFields.querySelector('input[name="confirm_password"]').value;
+                
+                if (currentPassword || newPassword || confirmPassword) {
+                    hasChanges = true;
+                }
+            }
+            
+            // Update save button state
+            saveBtn.disabled = !hasChanges;
+            if (hasChanges) {
+                saveBtn.classList.remove('btn-disabled');
+            } else {
+                saveBtn.classList.add('btn-disabled');
             }
         }
         
-        // Function to show delete account confirmation
-        function showDeleteConfirmation() {
-            document.getElementById('delete-confirmation').style.display = 'block';
+        // Function to show delete account modal with animation
+        function openDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            
+            // First set display to flex to make it visible
+            modal.style.display = 'flex';
+            
+            // Force browser to process the display change before adding the active class
+            setTimeout(() => {
+                modal.classList.add('active');
+                document.getElementById('delete-password').focus();
+            }, 10);
+            
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
         }
         
-        // Function to hide delete account confirmation
-        function hideDeleteConfirmation() {
-            document.getElementById('delete-confirmation').style.display = 'none';
+        // Function to hide delete account modal with animation
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            
+            // Remove the active class to trigger the fade out
+            modal.classList.remove('active');
+            
+            // Wait for the animation to complete before hiding the modal
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.getElementById('delete-password').value = '';
+            }, 300); // This should match the transition duration
+            
+            // Restore background scrolling
+            document.body.style.overflow = 'auto';
         }
         
         // Auto-hide notifications after 3 seconds
@@ -410,6 +662,141 @@
                 }, 3000);
             });
         });
+
+        // Add this to your existing script
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup input change monitoring
+            document.querySelectorAll('#user-info-form input:not([type="password"])').forEach(input => {
+                input.addEventListener('input', function() {
+                    checkFormChanged();
+                });
+            });
+            
+            // Monitor password fields
+            document.querySelectorAll('.password-fields input').forEach(input => {
+                input.addEventListener('input', function() {
+                    checkFormChanged();
+                });
+            });
+            
+            // Add initial disabled state to Save Changes button
+            const saveBtn = document.querySelector('.save-btn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.classList.add('btn-disabled');
+            }
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('delete-modal');
+            if (event.target === modal && modal.classList.contains('active')) {
+                closeDeleteModal();
+            }
+        });
+
+        // Close modal with escape key
+        document.addEventListener('keydown', function(event) {
+            const modal = document.getElementById('delete-modal');
+            if (event.key === 'Escape' && modal.classList.contains('active')) {
+                closeDeleteModal();
+            }
+        });
+
+        // Add these new functions for the password modal
+        function openPasswordModal() {
+            const modal = document.getElementById('password-modal');
+            
+            // First set display to flex to make it visible
+            modal.style.display = 'flex';
+            
+            // Force browser to process the display change before adding the active class
+            setTimeout(() => {
+                modal.classList.add('active');
+                document.getElementById('current-password').focus();
+            }, 10);
+            
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePasswordModal() {
+            const modal = document.getElementById('password-modal');
+            
+            // Remove the active class to trigger the fade out
+            modal.classList.remove('active');
+            
+            // Wait for the animation to complete before hiding the modal
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Clear password fields
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            }, 300); // This should match the transition duration
+            
+            // Restore background scrolling
+            document.body.style.overflow = 'auto';
+        }
+
+        // Function to validate password form
+        function validatePasswordForm() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const doneButton = document.getElementById('password-done-btn');
+            
+            // Basic validation
+            if (currentPassword && newPassword && confirmPassword && newPassword.length >= 6 && newPassword === confirmPassword) {
+                doneButton.disabled = false;
+                doneButton.classList.remove('btn-disabled');
+            } else {
+                doneButton.disabled = true;
+                doneButton.classList.add('btn-disabled');
+            }
+        }
+
+        // Add event listeners for modal controls
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password field validation
+            const passwordFields = document.querySelectorAll('#password-form input');
+            passwordFields.forEach(field => {
+                field.addEventListener('input', validatePasswordForm);
+            });
+            
+            // Close modal when clicking outside of it
+            window.addEventListener('click', function(event) {
+                const passwordModal = document.getElementById('password-modal');
+                if (event.target === passwordModal && passwordModal.classList.contains('active')) {
+                    closePasswordModal();
+                }
+            });
+            
+            // Close modals with escape key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    const passwordModal = document.getElementById('password-modal');
+                    if (passwordModal.classList.contains('active')) {
+                        closePasswordModal();
+                    }
+                }
+            });
+        });
+
+        // Handle password update form submission
+        function submitPasswordForm() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            // Transfer values to the main form
+            document.querySelector('input[name="current_password"]').value = currentPassword;
+            document.querySelector('input[name="new_password"]').value = newPassword;
+            document.querySelector('input[name="confirm_password"]').value = confirmPassword;
+            
+            // Submit the main form
+            document.getElementById('user-info-form').submit();
+        }
     </script>
 </body>
 </html>

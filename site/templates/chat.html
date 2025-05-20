@@ -802,15 +802,17 @@
                                 {% endif %}
                                 <div class="message-time">
                                     {{ message.created_at.strftime('%H:%M') }}
+                                    {% if message.sender_id == session.user_id %}
+                                    <span class="message-status">
+                                        {% if message.is_read %}
+                                        <i class="fas fa-check-double read" title="Read"></i>
+                                        {% else %}
+                                        <i class="fas fa-check unread" title="Delivered"></i>
+                                        {% endif %}
+                                    </span>
+                                    {% endif %}
                                 </div>
                                 {% if message.sender_id == session.user_id %}
-                                <span class="message-status">
-                                    {% if message.is_read %}
-                                    <i class="fas fa-check-double read" title="Read"></i>
-                                    {% else %}
-                                    <i class="fas fa-check unread" title="Delivered"></i>
-                                    {% endif %}
-                                </span>
                                 <div class="message-actions">
                                     <button class="message-action-btn edit-message-btn" data-id="{{ message.id }}" title="Edit">
                                         <i class="fas fa-edit"></i>
@@ -921,27 +923,12 @@
                             $('#selected-book-id').val('');
                             $('.selected-book').remove();
                             
-                            // Create message content HTML
-                            let messageHtml = `
-                                <div class="message-text">${response.message.content}</div>
-                                <span class="message-time">${response.message.created_at}</span>
-                                <span class="message-status">
-                                    <i class="fas fa-check unread" title="Delivered"></i>
-                                </span>
-                                <div class="message-actions">
-                                    <button class="message-action-btn edit-message-btn" data-id="${response.message.id}" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="message-action-btn delete-message-btn" data-id="${response.message.id}" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            `;
-                            
+                            // Create message HTML with consistent format
+                            let bookHtml = '';
                             // Check if a book was attached to the message
                             if (response.message.book) {
                                 const book = response.message.book;
-                                let bookHtml = `
+                                bookHtml = `
                                     <div class="attached-book">
                                         <a href="/book/${book.id}" target="_blank">
                                             <img src="${book.image_path || '/static/images/default_book.png'}" alt="${book.title}">
@@ -952,17 +939,31 @@
                                         </a>
                                     </div>
                                 `;
-                                messageHtml = bookHtml + messageHtml;
                             }
                             
-                            // Create and append the new message element
+                            // Create and append the new message element with consistent format
                             let newMessage = $(`
                                 <div class="message sent">
                                     <div class="message-avatar">
                                         <i class="fas fa-user"></i>
                                     </div>
                                     <div class="message-content">
-                                        ${messageHtml}
+                                        ${bookHtml}
+                                        <div class="message-text">${response.message.content}</div>
+                                        <div class="message-time">
+                                            ${response.message.created_at}
+                                            <span class="message-status">
+                                                <i class="fas fa-check unread" title="Delivered"></i>
+                                            </span>
+                                        </div>
+                                        <div class="message-actions">
+                                            <button class="message-action-btn edit-message-btn" data-id="${response.message.id}" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="message-action-btn delete-message-btn" data-id="${response.message.id}" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             `);
