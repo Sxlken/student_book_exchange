@@ -8,6 +8,7 @@ import datetime
 import secrets
 from werkzeug.utils import secure_filename
 from flask_wtf.file import FileField, FileAllowed
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 # Define allowed extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -17,6 +18,9 @@ app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 bcrypt = Bcrypt(app)
+
+# Initialize SocketIO after creating the Flask app
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Create upload directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -2478,5 +2482,197 @@ def download_pdf(book_id):
     else:
         return send_file(file_path, as_attachment=True, download_name=download_name)
 
+@socketio.on('join')
+def on_join(data):
+    """User joins a chat room"""
+    user_id = data.get('user_id')
+    receiver_id = data.get('receiver_id')
+    
+    # Create a unique room name (combination of both user IDs, sorted and joined)
+    users = sorted([user_id, receiver_id])
+    room = f"chat_{users[0]}_{users[1]}"
+    
+    join_room(room)
+    # Also join user's personal room for notifications
+    join_room(f"user_{user_id}")
+
+@socketio.on('send_message')
+def send_message(data):
+    """Handle sending a message"""
+    sender_id = data.get('sender_id')
+    receiver_id = data.get('receiver_id')
+    content = data.get('content')
+    book = data.get('book')
+    
+    # Save message to database
+    book_id = book.get('id') if book else None
+    
+    try:
+        cursor.execute("""
+            INSERT INTO messages (sender_id, receiver_id, content, book_id)
+            VALUES (%s, %s, %s, %s) RETURNING id, created_at
+        """, (sender_id, receiver_id, content, book_id))
+        
+        message_data = cursor.fetchone()
+        message_id = message_data[0]
+        created_at = message_data[1]
+        conn.commit()
+        
+        # Create response data
+        response = {
+            'id': message_id,
+            'sender_id': sender_id,
+            'receiver_id': receiver_id,
+            'content': content,
+            'time': created_at.strftime('%H:%M'),
+            'edited': False,
+            'book': book
+        }
+        
+        # Emit message to the chat room
+        users = sorted([sender_id, receiver_id])
+        room = f"chat_{users[0]}_{users[1]}"
+        emit('new_message', response, room=room)
+        
+        # Also emit to receiver's personal room for notifications
+        emit('new_message_notification', {
+            'sender_id': sender_id,
+            'count': 1
+        }, room=f"user_{receiver_id}")
+    
+    except Exception as e:
+        app.logger.error(f"Error sending message via socket: {str(e)}")
+        conn.rollback()
+
+@socketio.on('edit_message')
+def edit_message(data):
+    """Handle editing a message"""
+    message_id = data.get('id')
+    content = data.get('content')
+    user_id = data.get('user_id')
+    
+    try:
+        # Verify user owns the message
+        cursor.execute("""
+            SELECT sender_id, receiver_id FROM messages 
+            WHERE id = %s
+        """, (message_id,))
+        
+        message = cursor.fetchone()
+        if not message or message[0] != user_id:
+            # User doesn't own this message
+            return
+        
+        # Update the message
+        cursor.execute("""
+            UPDATE messages
+            SET content = %s, edited_at = NOW()
+            WHERE id = %s AND sender_id = %s
+            RETURNING receiver_id
+        """, (content, message_id, user_id))
+        
+        if cursor.rowcount == 0:
+            return  # No update happened
+            
+        receiver_id = cursor.fetchone()[0]
+        conn.commit()
+        
+        # Emit message update event
+        users = sorted([user_id, receiver_id])
+        room = f"chat_{users[0]}_{users[1]}"
+        
+        emit('message_updated', {
+            'id': message_id,
+            'content': content,
+            'edited': True
+        }, room=room)
+        
+    except Exception as e:
+        app.logger.error(f"Error editing message via socket: {str(e)}")
+        conn.rollback()
+
+@socketio.on('delete_message')
+def delete_message(data):
+    """Handle deleting a message"""
+    message_id = data.get('id')
+    user_id = data.get('user_id')
+    
+    try:
+        # Verify user owns the message
+        cursor.execute("""
+            SELECT sender_id, receiver_id FROM messages 
+            WHERE id = %s
+        """, (message_id,))
+        
+        message = cursor.fetchone()
+        if not message or message[0] != user_id:
+            # User doesn't own this message
+            return
+            
+        receiver_id = message[1]
+        
+        # Delete the message
+        cursor.execute("""
+            DELETE FROM messages
+            WHERE id = %s AND sender_id = %s
+        """, (message_id, user_id))
+        
+        conn.commit()
+        
+        # Emit message delete event
+        users = sorted([user_id, receiver_id])
+        room = f"chat_{users[0]}_{users[1]}"
+        
+        emit('message_deleted', {
+            'id': message_id
+        }, room=room)
+        
+    except Exception as e:
+        app.logger.error(f"Error deleting message via socket: {str(e)}")
+        conn.rollback()
+
+@socketio.on('mark_read')
+def mark_message_read(data):
+    """Mark messages as read"""
+    user_id = data.get('user_id')
+    message_id = data.get('message_id')
+    
+    try:
+        # Get sender of the message
+        cursor.execute("""
+            SELECT sender_id FROM messages 
+            WHERE id = %s AND receiver_id = %s
+        """, (message_id, user_id))
+        
+        result = cursor.fetchone()
+        if not result:
+            return
+            
+        sender_id = result[0]
+        
+        # Mark this and all older unread messages from the same sender as read
+        cursor.execute("""
+            UPDATE messages 
+            SET is_read = TRUE 
+            WHERE sender_id = %s AND receiver_id = %s AND is_read = FALSE
+        """, (sender_id, user_id))
+        
+        if cursor.rowcount > 0:
+            conn.commit()
+            
+            # Emit read receipt event
+            users = sorted([user_id, sender_id])
+            room = f"chat_{users[0]}_{users[1]}"
+            
+            emit('message_read', {
+                'reader_id': user_id,
+                'sender_id': sender_id
+            }, room=room)
+            
+    except Exception as e:
+        app.logger.error(f"Error marking message as read: {str(e)}")
+        conn.rollback()
+
+# Modify the run line to use socketio
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)

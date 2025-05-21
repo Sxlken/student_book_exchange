@@ -215,20 +215,52 @@
             background-color: rgba(0, 0, 0, 0.05);
         }
 
-        /* Message actions updates */
+        /* Message actions */
+        .message-content {
+            position: relative; /* Ensure the content is positioned relative for absolute positioning of actions */
+        }
+
         .message-actions {
             position: absolute;
-            top: 0;
-            right: 0;
-            display: none;
-            background-color: rgba(255, 255, 255, 0.95);
+            top: 5px;
+            right: 5px;
+            display: none; /* Hidden by default, shown on hover */
+            background-color: rgba(255, 255, 255, 0.9);
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             z-index: 10;
+            padding: 2px;
         }
 
         .message.sent .message-actions {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(227, 242, 253, 0.9);
+        }
+
+        .message-content:hover .message-actions {
+            display: flex;
+        }
+
+        .message-action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 0.9em;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .message-action-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .edit-message-btn:hover {
+            color: #007bff;
+        }
+
+        .delete-message-btn:hover {
+            color: #dc3545;
         }
 
         /* Responsive adjustments for smaller screens */
@@ -248,18 +280,18 @@
             }
         }
 
-        .message-edited {
-            font-size: 0.7em;
+        .edited-tag {
+            font-size: 0.75em;
+            color: #9e9e9e;
+            display: block;
+            text-align: right;
             font-style: italic;
-            margin-right: 5px;
+            margin-top: 2px;
+            margin-right: 0;
         }
         
-        .message.sent .message-edited {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .message.received .message-edited {
-            color: rgba(0, 0, 0, 0.5);
+        .message.sent .edited-tag {
+            color: #78909c;
         }
         
         /* Styles for the edit message modal */
@@ -334,16 +366,23 @@
             cursor: pointer;
             font-weight: 500;
             border: none;
+            transition: background-color 0.2s, opacity 0.2s;
         }
         
-        .cancel-btn {
-            background-color: #f8f9fa;
-            color: #333;
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #B0BEC5 !important;
+            color: #fff !important;
         }
         
         .save-btn {
             background-color: #007bff;
             color: white;
+        }
+        
+        .save-btn:not(.btn-disabled):hover {
+            background-color: #0069d9;
         }
 
         .message-form {
@@ -739,11 +778,8 @@
             background-color: rgba(220, 53, 69, 0.1);
         }
 
-        .edited-tag {
-            font-size: 0.8em;
-            color: #999;
-            font-style: italic;
-            margin-left: 5px;
+        .message-edited {
+            display: none;
         }
     </style>
 </head>
@@ -833,9 +869,6 @@
                                 </div>
                                 {% endif %}
                                 <div class="message-text">{{ message.content }}</div>
-                                {% if message.edited_at %}
-                                    <span class="edited-tag">(edited)</span>
-                                {% endif %}
                                 <div class="message-time">
                                     {{ message.created_at.strftime('%H:%M') }}
                                     {% if message.sender_id == session.user_id %}
@@ -848,6 +881,9 @@
                                     </span>
                                     {% endif %}
                                 </div>
+                                {% if message.edited_at %}
+                                    <span class="edited-tag">(edited)</span>
+                                {% endif %}
                                 {% if message.sender_id == session.user_id %}
                                 <div class="message-actions">
                                     <button class="message-action-btn edit-message-btn" data-id="{{ message.id }}" title="Edit">
@@ -925,6 +961,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     <script>
         $(document).ready(function() {
             // Прокрутка чата вниз
@@ -934,7 +971,131 @@
             }
             scrollToBottom();
             
-            // Отправка сообщения
+            // Socket.IO connection
+            const socket = io();
+            const receiverId = {{ receiver.id }};
+            const userId = {{ session.user_id }};
+            
+            // Join chat room
+            socket.emit('join', {
+                user_id: userId,
+                receiver_id: receiverId
+            });
+            
+            // Listen for new messages
+            socket.on('new_message', function(data) {
+                // Only process if the message is for this chat
+                if ((data.sender_id == userId && data.receiver_id == receiverId) || 
+                    (data.sender_id == receiverId && data.receiver_id == userId)) {
+                    
+                    // Create the message element based on sender
+                    const isMine = data.sender_id == userId;
+                    const messageType = isMine ? 'sent' : 'received';
+                    
+                    // Create book HTML if a book is attached
+                    let bookHtml = '';
+                    if (data.book) {
+                        bookHtml = `
+                            <div class="attached-book">
+                                <a href="/book/${data.book.id}" target="_blank">
+                                    <img src="${data.book.image_path || '/static/images/default_book.png'}" alt="${data.book.title}">
+                                    <div class="attached-book-details">
+                                        <div class="attached-book-title">${data.book.title}</div>
+                                        <div class="attached-book-author">${data.book.author}</div>
+                                    </div>
+                                </a>
+                            </div>
+                        `;
+                    }
+                    
+                    // Create message actions if it's my message
+                    let messageActions = '';
+                    if (isMine) {
+                        messageActions = `
+                            <div class="message-actions">
+                                <button class="message-action-btn edit-message-btn" data-id="${data.id}" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="message-action-btn delete-message-btn" data-id="${data.id}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                    
+                    // Create message status for sent messages
+                    let messageStatus = '';
+                    if (isMine) {
+                        messageStatus = `
+                            <span class="message-status">
+                                <i class="fas fa-check unread" title="Delivered"></i>
+                            </span>
+                        `;
+                    }
+                    
+                    // Build the complete message element
+                    const messageHtml = `
+                        <div class="message ${messageType}">
+                            <div class="message-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="message-content">
+                                ${bookHtml}
+                                <div class="message-text">${data.content}</div>
+                                <div class="message-time">
+                                    ${data.time}
+                                    ${messageStatus}
+                                </div>
+                                ${data.edited ? '<span class="edited-tag">(edited)</span>' : ''}
+                                ${messageActions}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Append message and scroll to bottom
+                    $('#messages').append(messageHtml);
+                    scrollToBottom();
+                    
+                    // Mark as read if it's a received message
+                    if (!isMine) {
+                        socket.emit('mark_read', {
+                            message_id: data.id,
+                            user_id: userId
+                        });
+                    }
+                }
+            });
+            
+            // Listen for message updates (edits)
+            socket.on('message_updated', function(data) {
+                const messageElement = $(`.edit-message-btn[data-id="${data.id}"]`).closest('.message-content');
+                if (messageElement.length) {
+                    messageElement.find('.message-text').text(data.content);
+                    
+                    // Add edited tag if not already present
+                    if (messageElement.find('.edited-tag').length === 0) {
+                        messageElement.append('<span class="edited-tag">(edited)</span>');
+                    }
+                }
+            });
+            
+            // Listen for message deletions
+            socket.on('message_deleted', function(data) {
+                const messageElement = $(`.message-action-btn[data-id="${data.id}"]`).closest('.message');
+                if (messageElement.length) {
+                    messageElement.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }
+            });
+            
+            // Listen for read receipts
+            socket.on('message_read', function(data) {
+                // Update read status for messages
+                $(`.message.sent .message-status .unread`).removeClass('unread').addClass('read').attr('title', 'Read');
+            });
+            
+            // Update message form to use WebSockets
             $('#message-form').submit(function(e) {
                 e.preventDefault();
                 
@@ -943,167 +1104,63 @@
                     return;
                 }
                 
-                $.ajax({
-                    url: '{{ url_for("send_message", chat_id=receiver.id) }}',
-                    type: 'POST',
-                    data: {
-                        content: messageContent,
-                        book_id: $('#selected-book-id').val()
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Очищаем поле ввода
-                            $('#message-input').val('');
-                            
-                            // Очищаем информацию о выбранной книге
-                            $('#selected-book-id').val('');
-                            $('.selected-book').remove();
-                            
-                            // Create message HTML with consistent format
-                            let bookHtml = '';
-                            // Check if a book was attached to the message
-                            if (response.message.book) {
-                                const book = response.message.book;
-                                bookHtml = `
-                                    <div class="attached-book">
-                                        <a href="/book/${book.id}" target="_blank">
-                                            <img src="${book.image_path || '/static/images/default_book.png'}" alt="${book.title}">
-                                            <div class="attached-book-details">
-                                                <div class="attached-book-title">${book.title}</div>
-                                                <div class="attached-book-author">${book.author}</div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                `;
-                            }
-                            
-                            // Create and append the new message element with consistent format
-                            let newMessage = $(`
-                                <div class="message sent">
-                                    <div class="message-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="message-content">
-                                        ${bookHtml}
-                                        <div class="message-text">${response.message.content}</div>
-                                        <div class="message-time">
-                                            ${response.message.created_at}
-                                            <span class="message-status">
-                                                <i class="fas fa-check unread" title="Delivered"></i>
-                                            </span>
-                                        </div>
-                                        <div class="message-actions">
-                                            <button class="message-action-btn edit-message-btn" data-id="${response.message.id}" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="message-action-btn delete-message-btn" data-id="${response.message.id}" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `);
-                            
-                            // Append the message and scroll to bottom
-                            $('#messages').append(newMessage);
-                            scrollToBottom();
-                            
-                        } else {
-                            // Show error notification
-                            showNotification(response.error || 'Error sending message', 'error');
-                        }
-                    },
-                    error: function() {
-                        showNotification('Error connecting to server', 'error');
+                // Get book data if a book is selected
+                let bookData = null;
+                const bookId = $('#selected-book-id').val();
+                if (bookId) {
+                    // Get book data from the selected book element
+                    const bookElement = $('.selected-book');
+                    if (bookElement.length) {
+                        bookData = {
+                            id: bookId,
+                            title: bookElement.find('.selected-book-title').text(),
+                            author: bookElement.find('.selected-book-author').text(),
+                            image_path: bookElement.find('img').attr('src')
+                        };
                     }
-                });
-            });
-
-            // Редактирование сообщения - открытие модального окна
-            $(document).on('click', '.edit-message-btn', function() {
-                let messageId = $(this).data('id');
-                let messageContent = $(this).closest('.message-content').find('.message-text').text().trim();
+                }
                 
-                $('#edit-message-id').val(messageId);
-                $('#edit-message-content').val(messageContent);
-                $('#edit-modal').css('display', 'flex');
+                // Emit the message event
+                socket.emit('send_message', {
+                    sender_id: userId,
+                    receiver_id: receiverId,
+                    content: messageContent,
+                    book: bookData
+                });
+                
+                // Clear message input and book selection
+                $('#message-input').val('');
+                $('#selected-book-id').val('');
+                $('.selected-book').remove();
             });
-
-            // Закрытие модального окна редактирования
-            $('.close-modal, #cancel-edit').click(function() {
-                $('#edit-modal').css('display', 'none');
-            });
-
-            // Отправка формы редактирования сообщения
+            
+            // Update edit functionality to use WebSockets
             $('#edit-message-form').on('submit', function(e) {
                 e.preventDefault();
                 
                 let messageId = $('#edit-message-id').val();
                 let messageContent = $('#edit-message-content').val();
                 
-                $.ajax({
-                    url: '/edit_message/' + messageId,
-                    type: 'POST',
-                    data: {
-                        content: messageContent
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $('#edit-modal').css('display', 'none');
-                            
-                            let messageElement = $(`.edit-message-btn[data-id="${messageId}"]`).closest('.message-content');
-                            messageElement.find('.message-text').text(messageContent);
-                            
-                            if (messageElement.find('.message-edited').length === 0) {
-                                messageElement.find('.message-time').after('<span class="message-edited">(edited)</span>');
-                            }
-                            
-                            showNotification('Message updated', 'success');
-                        }
-                    },
-                    error: function() {
-                        showNotification('Error connecting to server', 'error');
-                    }
+                socket.emit('edit_message', {
+                    id: messageId,
+                    content: messageContent,
+                    user_id: userId
                 });
+                
+                $('#edit-modal').css('display', 'none');
             });
-
-            // Удаление сообщения
+            
+            // Update delete functionality to use WebSockets
             $(document).on('click', '.delete-message-btn', function() {
                 if (confirm('Are you sure you want to delete this message?')) {
                     let messageId = $(this).data('id');
-                    let messageElement = $(this).closest('.message');
                     
-                    $.ajax({
-                        url: '/delete_message/' + messageId,
-                        type: 'POST',
-                        success: function(response) {
-                            if (response.success) {
-                                messageElement.fadeOut(300, function() {
-                                    $(this).remove();
-                                });
-                            }
-                        },
-                        error: function() {
-                            showNotification('Error connecting to server', 'error');
-                        }
+                    socket.emit('delete_message', {
+                        id: messageId,
+                        user_id: userId
                     });
                 }
             });
-
-            // Показ уведомлений
-            function showNotification(message, type) {
-                let notificationClass = 'notification-' + type;
-                let notification = $('<div class="notification ' + notificationClass + '">' + message + '</div>');
-                
-                $('.notification-container').append(notification);
-                
-                setTimeout(function() {
-                    notification.addClass('fade-out');
-                    setTimeout(function() {
-                        notification.remove();
-                    }, 500);
-                }, 3000);
-            }
 
             // Открытие модального окна выбора книги
             $('#share-book-btn').click(function() {
@@ -1211,6 +1268,24 @@
                     $('#selected-book-id').val(book.id);
                 }
             }
+
+            // Function to check if message was edited
+            function checkMessageEdited() {
+                let originalContent = $('#edit-message-form').data('original-content');
+                let currentContent = $('#edit-message-content').val();
+                
+                // Enable/disable save button based on whether content has changed
+                if (currentContent !== originalContent && currentContent.trim() !== '') {
+                    $('.save-btn').prop('disabled', false).removeClass('btn-disabled');
+                } else {
+                    $('.save-btn').prop('disabled', true).addClass('btn-disabled');
+                }
+            }
+            
+            // Check for changes when user types in edit textarea
+            $('#edit-message-content').on('input', function() {
+                checkMessageEdited();
+            });
         });
     </script>
 

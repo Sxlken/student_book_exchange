@@ -587,22 +587,6 @@
                             <span>Publication Year: {{ book['publication_year'] }}</span>
                         </div>
                         {% endif %}
-                        <div class="meta-item">
-                            <i class="fas fa-clock"></i>
-                            <span>Loan Duration: 
-                                {% if book['loan_duration']|int == 7 %}
-                                    1 Week
-                                {% elif book['loan_duration']|int == 14 %}
-                                    2 Weeks
-                                {% elif book['loan_duration']|int == 30 %}
-                                    1 Month
-                                {% elif book['loan_duration']|int == 90 %}
-                                    3 Months
-                                {% else %}
-                                    {{ book['loan_duration']|int }} days
-                                {% endif %}
-                            </span>
-                        </div>
                     </div>
                     
                     <div class="book-rating">
