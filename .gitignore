@@ -1,4 +1,8 @@
 site/static/uploads/
 .venv/
+.venv/**
 .vscode/
+__pycache__/
+*.py[cod]
+*$py.class
 
