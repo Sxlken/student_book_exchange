@@ -1364,6 +1364,19 @@
                     });
                 }, 3000);
             }
+
+            // More robust close modal handlers
+            $(document).on('click', '.close-modal, #cancel-edit', function(e) {
+                e.preventDefault();
+                $('#edit-modal').hide();
+            });
+
+            // Also add a keyboard handler to close the modal when Escape is pressed
+            $(document).keydown(function(e) {
+                if (e.key === "Escape" && $('#edit-modal').is(":visible")) {
+                    $('#edit-modal').hide();
+                }
+            });
         });
     </script>
 
