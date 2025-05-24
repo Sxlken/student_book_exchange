@@ -1068,14 +1068,26 @@
             
             // Listen for message updates (edits)
             socket.on('message_updated', function(data) {
+                console.log('Message updated event received:', data);
+                
+                // Find the message element using the message ID
                 const messageElement = $(`.edit-message-btn[data-id="${data.id}"]`).closest('.message-content');
+                
                 if (messageElement.length) {
+                    // Update the message text
                     messageElement.find('.message-text').text(data.content);
                     
                     // Add edited tag if not already present
                     if (messageElement.find('.edited-tag').length === 0) {
                         messageElement.append('<span class="edited-tag">(edited)</span>');
                     }
+                    
+                    // Show a notification for received updates (only if it's not from current user)
+                    if (data.sender_id !== userId) {
+                        showNotification('Message was updated', 'info');
+                    }
+                } else {
+                    console.warn('Could not find message element to update:', data.id);
                 }
             });
             
@@ -1134,20 +1146,64 @@
                 $('.selected-book').remove();
             });
             
-            // Update edit functionality to use WebSockets
+            // Replace the edit message handler with this updated version
+            $(document).on('click', '.edit-message-btn', function() {
+                let messageId = $(this).data('id');
+                let messageContent = $(this).closest('.message-content').find('.message-text').text().trim();
+                
+                $('#edit-message-id').val(messageId);
+                $('#edit-message-content').val(messageContent);
+                
+                // Store original message for comparison
+                $('#edit-message-form').data('original-content', messageContent);
+                
+                // Initially disable save button
+                $('.save-btn').prop('disabled', true).addClass('btn-disabled');
+                
+                // Show the modal
+                $('#edit-modal').css('display', 'flex');
+            });
+            
+            // Fix the edit message form submission
             $('#edit-message-form').on('submit', function(e) {
                 e.preventDefault();
                 
                 let messageId = $('#edit-message-id').val();
-                let messageContent = $('#edit-message-content').val();
+                let messageContent = $('#edit-message-content').val().trim();
                 
-                socket.emit('edit_message', {
-                    id: messageId,
-                    content: messageContent,
-                    user_id: userId
-                });
-                
-                $('#edit-modal').css('display', 'none');
+                // Check if the message content has changed and is not empty
+                if (messageContent !== $('#edit-message-form').data('original-content') && messageContent !== '') {
+                    // Emit the edit message event
+                    socket.emit('edit_message', {
+                        id: messageId,
+                        content: messageContent,
+                        user_id: userId
+                    });
+                    
+                    // Update UI immediately for better user experience
+                    let messageElement = $(`.edit-message-btn[data-id="${messageId}"]`).closest('.message-content');
+                    if (messageElement.length) {
+                        messageElement.find('.message-text').text(messageContent);
+                        
+                        // Add edited tag if not already present
+                        if (messageElement.find('.edited-tag').length === 0) {
+                            messageElement.append('<span class="edited-tag">(edited)</span>');
+                        }
+                    }
+                    
+                    // Close the modal
+                    $('#edit-modal').css('display', 'none');
+                    
+                    // Show a success notification
+                    showNotification('Message updated successfully', 'success');
+                } else {
+                    // Show an error if the message is empty or unchanged
+                    if (messageContent === '') {
+                        showNotification('Message cannot be empty', 'error');
+                    } else {
+                        $('#edit-modal').css('display', 'none');
+                    }
+                }
             });
             
             // Update delete functionality to use WebSockets
@@ -1286,6 +1342,28 @@
             $('#edit-message-content').on('input', function() {
                 checkMessageEdited();
             });
+
+            // Add a showNotification function if it's not already defined
+            function showNotification(message, type) {
+                let notificationClass = 'notification-' + type;
+                let iconClass = type === 'success' ? 'fa-check-circle' : 
+                               (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+                
+                let notification = $(`
+                    <div class="notification ${notificationClass}">
+                        <i class="fas ${iconClass}"></i>
+                        ${message}
+                    </div>
+                `);
+                
+                $('.notification-container').append(notification);
+                
+                setTimeout(function() {
+                    notification.fadeOut(500, function() {
+                        $(this).remove();
+                    });
+                }, 3000);
+            }
         });
     </script>
 

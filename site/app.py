@@ -2584,7 +2584,8 @@ def edit_message(data):
         emit('message_updated', {
             'id': message_id,
             'content': content,
-            'edited': True
+            'edited': True,
+            'sender_id': user_id  # Include sender_id in the response
         }, room=room)
         
     except Exception as e:
