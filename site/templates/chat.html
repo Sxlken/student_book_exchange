@@ -1096,11 +1096,15 @@
             
             // Listen for message deletions
             socket.on('message_deleted', function(data) {
-                const messageElement = $(`.message.sent .message-actions[data-id="${data.id}"]`).closest('.message');
+                // Find message using data-message-id attribute
+                const messageElement = $(`[data-message-id="${data.id}"]`).closest('.message');
+                
                 if (messageElement.length) {
                     messageElement.fadeOut(300, function() {
                         $(this).remove();
                     });
+                } else {
+                    console.warn('Could not find message element to delete:', data.id);
                 }
             });
             
@@ -1224,6 +1228,10 @@
             $(document).on('click', '.delete-message-btn', function() {
                 if (confirm('Are you sure you want to delete this message?')) {
                     let messageId = $(this).data('id');
+                    let messageElement = $(this).closest('.message');
+                    
+                    // Show deletion in progress
+                    messageElement.css('opacity', '0.5');
                     
                     socket.emit('delete_message', {
                         id: messageId,
