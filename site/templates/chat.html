@@ -856,7 +856,7 @@
                             <div class="message-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <div class="message-content">
+                            <div class="message-content" data-message-id="{{ message.id }}">
                                 {% if message.book_id and message.book_title %}
                                 <div class="attached-book">
                                     <a href="{{ url_for('book_detail', book_id=message.book_id) }}" target="_blank">
@@ -1039,7 +1039,7 @@
                             <div class="message-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <div class="message-content">
+                            <div class="message-content" data-message-id="${data.id}">
                                 ${bookHtml}
                                 <div class="message-text">${data.content}</div>
                                 <div class="message-time">
@@ -1070,22 +1070,25 @@
             socket.on('message_updated', function(data) {
                 console.log('Message updated event received:', data);
                 
-                // Find the message element using the message ID
-                const messageElement = $(`.edit-message-btn[data-id="${data.id}"]`).closest('.message-content');
+                // Find the message element using the message ID - more robust selector
+                const messageElement = $(`[data-message-id="${data.id}"]`);
                 
                 if (messageElement.length) {
-                    // Update the message text
-                    messageElement.find('.message-text').text(data.content);
+                    // Update the message text with animation
+                    messageElement.find('.message-text').fadeOut(200, function() {
+                        $(this).text(data.content).fadeIn(200);
+                    });
                     
                     // Add edited tag if not already present
                     if (messageElement.find('.edited-tag').length === 0) {
-                        messageElement.append('<span class="edited-tag">(edited)</span>');
+                        const editedTag = $('<span class="edited-tag">(edited)</span>');
+                        editedTag.hide();
+                        messageElement.append(editedTag);
+                        editedTag.fadeIn(300);
                     }
                     
-                    // Show a notification for received updates (only if it's not from current user)
-                    if (data.sender_id !== userId) {
-                        showNotification('Message was updated', 'info');
-                    }
+                    // Don't show notification for other users' edits
+                    // The notification for the sender is handled in the edit form submission
                 } else {
                     console.warn('Could not find message element to update:', data.id);
                 }
@@ -1093,7 +1096,7 @@
             
             // Listen for message deletions
             socket.on('message_deleted', function(data) {
-                const messageElement = $(`.message-action-btn[data-id="${data.id}"]`).closest('.message');
+                const messageElement = $(`.message.sent .message-actions[data-id="${data.id}"]`).closest('.message');
                 if (messageElement.length) {
                     messageElement.fadeOut(300, function() {
                         $(this).remove();
@@ -1164,7 +1167,7 @@
                 $('#edit-modal').css('display', 'flex');
             });
             
-            // Fix the edit message form submission
+            // Fix the edit message form submission with better visual feedback
             $('#edit-message-form').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -1173,6 +1176,9 @@
                 
                 // Check if the message content has changed and is not empty
                 if (messageContent !== $('#edit-message-form').data('original-content') && messageContent !== '') {
+                    // Show loading state on the save button
+                    $('.save-btn').prop('disabled', true).text('Saving...');
+                    
                     // Emit the edit message event
                     socket.emit('edit_message', {
                         id: messageId,
@@ -1181,27 +1187,35 @@
                     });
                     
                     // Update UI immediately for better user experience
-                    let messageElement = $(`.edit-message-btn[data-id="${messageId}"]`).closest('.message-content');
+                    let messageElement = $(`[data-message-id="${messageId}"]`);
                     if (messageElement.length) {
-                        messageElement.find('.message-text').text(messageContent);
-                        
-                        // Add edited tag if not already present
-                        if (messageElement.find('.edited-tag').length === 0) {
-                            messageElement.append('<span class="edited-tag">(edited)</span>');
-                        }
+                        messageElement.find('.message-text').fadeOut(200, function() {
+                            $(this).text(messageContent).fadeIn(200);
+                            
+                            // Add edited tag if not already present
+                            if (messageElement.find('.edited-tag').length === 0) {
+                                const editedTag = $('<span class="edited-tag">(edited)</span>');
+                                editedTag.hide();
+                                messageElement.append(editedTag);
+                                editedTag.fadeIn(300);
+                            }
+                        });
                     }
                     
                     // Close the modal
-                    $('#edit-modal').css('display', 'none');
-                    
-                    // Show a success notification
-                    showNotification('Message updated successfully', 'success');
+                    setTimeout(function() {
+                        $('#edit-modal').hide();
+                        $('.save-btn').prop('disabled', false).text('Save');
+                        
+                        // Show a success notification only for the user who edited the message
+                        showNotification('Message updated successfully', 'success');
+                    }, 500);
                 } else {
                     // Show an error if the message is empty or unchanged
                     if (messageContent === '') {
                         showNotification('Message cannot be empty', 'error');
                     } else {
-                        $('#edit-modal').css('display', 'none');
+                        $('#edit-modal').hide();
                     }
                 }
             });
