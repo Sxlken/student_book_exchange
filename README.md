@@ -34,6 +34,7 @@ Electronic Library is a Flask-based web application designed to facilitate book 
 - **Authentication**: Flask-Bcrypt
 - **Form Handling**: Flask-WTF
 - **File Uploads**: Werkzeug
+- **Real-Time Chat**: flask-socketio
 
 ## Installation and Setup
 
