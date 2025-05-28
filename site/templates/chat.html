@@ -984,10 +984,21 @@
             
             // Listen for new messages
             socket.on('new_message', function(data) {
-                // Only process if the message is for this chat
                 if ((data.sender_id == userId && data.receiver_id == receiverId) || 
                     (data.sender_id == receiverId && data.receiver_id == userId)) {
                     
+                    $('.empty-chat').remove();
+
+                    // Insert date separator if this is the first message
+                    if ($('#messages .message').length === 0) {
+                        const now = new Date();
+                        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                        const formattedDate = now.toLocaleDateString('en-US', options);
+                        $('#messages').append(
+                            `<div class="system-message"><span>${formattedDate}</span></div>`
+                        );
+                    }
+
                     // Create the message element based on sender
                     const isMine = data.sender_id == userId;
                     const messageType = isMine ? 'sent' : 'received';
@@ -1096,12 +1107,14 @@
             
             // Listen for message deletions
             socket.on('message_deleted', function(data) {
-                // Find message using data-message-id attribute
                 const messageElement = $(`[data-message-id="${data.id}"]`).closest('.message');
-                
                 if (messageElement.length) {
                     messageElement.fadeOut(300, function() {
                         $(this).remove();
+                        // Remove date separator if no messages left
+                        if ($('#messages .message').length === 0) {
+                            $('#messages .system-message').remove();
+                        }
                     });
                 } else {
                     console.warn('Could not find message element to delete:', data.id);
