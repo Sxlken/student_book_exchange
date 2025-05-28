@@ -698,7 +698,7 @@ def home():
         
         # Add the appropriate ORDER BY clause
         if sort_by == 'rating':
-            order_clause = "ORDER BY avg_rating DESC, b.added_date DESC"
+            order_clause = "ORDER BY avg_rating DESC, review_count DESC, b.added_date DESC"
         elif sort_by == 'popular':
             order_clause = "ORDER BY review_count DESC, b.added_date DESC"
         else:  # default: recent
@@ -1384,11 +1384,11 @@ def category(id):
     
     # Add the appropriate ORDER BY clause
     if sort_by == 'rating':
-        order_clause = "ORDER BY avg_rating DESC, b.added_date DESC"
+        order_clause = "ORDER BY avg_rating DESC, review_count DESC, b.added_date DESC"
     elif sort_by == 'popular':
         order_clause = "ORDER BY review_count DESC, b.added_date DESC"
     else:  # default: recent
-        order_clause = "ORDER BY b.added_date DESC"
+        order_clause = "ORDER BY COALESCE(b.added_date, NOW()) DESC"
         
     full_query = f"{base_query} {order_clause}"
     
@@ -2723,7 +2723,7 @@ def api_books():
         GROUP BY b.id, u.username, u.display_name, c.name
     """
     if sort_by == 'rating':
-        order_clause = "ORDER BY avg_rating DESC, b.added_date DESC"
+        order_clause = "ORDER BY avg_rating DESC, review_count DESC, b.added_date DESC"
     elif sort_by == 'popular':
         order_clause = "ORDER BY review_count DESC, b.added_date DESC"
     else:
