@@ -101,15 +101,15 @@
             <div class="section-header">
                 <h2>Available Books</h2>
                 <div class="filters">
-                    <select id="sortBy" onchange="sortBooks(this.value)">
-                        <option value="recent">Most Recent</option>
-                        <option value="rating">Highest Rated</option>
-                        <option value="popular">Most Popular</option>
+                    <select id="sortBy" onchange="sortBooksAjax(this.value)">
+                        <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="rating" {% if current_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
                     </select>
                 </div>
             </div>
             
-            <div class="books-grid">
+            <div id="books-grid" class="books-grid">
                 {% if books %}
                     {% for book in books %}
                         <div class="book-card">
@@ -408,11 +408,51 @@
             });
         });
 
-        // Sort books function
-        function sortBooks(sortBy) {
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('sort', sortBy);
-            window.location.href = currentUrl.toString();
+        function sortBooksAjax(sortBy) {
+            fetch(`/api/books?sort=${sortBy}`)
+                .then(response => response.json())
+                .then(data => {
+                    const booksGrid = document.getElementById('books-grid');
+                    if (!data.books.length) {
+                        booksGrid.innerHTML = '<p class="no-books">No books available at the moment.</p>';
+                        return;
+                    }
+                    booksGrid.innerHTML = data.books.map(book => `
+                        <div class="book-card">
+                            <div class="book-image">
+                                <a href="/book/${book.id}">
+                                    <img src="${book.image_path ? '/static/' + book.image_path : '/static/images/default_book.png'}" alt="${book.title}">
+                                </a>
+                            </div>
+                            <div class="book-info">
+                                <h3><a href="/book/${book.id}">${book.title}</a></h3>
+                                ${book.category_name ? `<p class="category"><i class="fas fa-tag"></i> ${book.category_name}</p>` : ''}
+                                <p class="owner"><i class="fas fa-user"></i> Publisher: ${book.owner_display_name}</p>
+                                <p class="author"><i class="fas fa-pen"></i> Author: ${book.author}</p>
+                                <div class="book-rating">
+                                    <div class="stars" style="--rating: ${book.avg_rating || 0}"></div>
+                                    <span>(${book.review_count || 0} ${book.review_count == 1 ? 'review' : 'reviews'})</span>
+                                </div>
+                                ${book.condition ? `<p class="condition"><i class="fas fa-info-circle"></i> Condition: ${book.condition.charAt(0).toUpperCase() + book.condition.slice(1)}</p>` : ''}
+                                <p class="status">
+                                    <i class="fas fa-circle"></i> Status: 
+                                    <span class="status-badge status-${book.status}">${book.status.charAt(0).toUpperCase() + book.status.slice(1)}</span>
+                                </p>
+                            </div>
+                            <div class="book-actions">
+                                ${book.is_favorite !== undefined ? `
+                                    <button data-book-id="${book.id}" class="favorite-btn toggle-favorite">
+                                        <i class="far fa-heart"></i> Add to Favorites
+                                    </button>
+                                ` : `
+                                    <a href="/login" class="favorite-btn">
+                                        <i class="far fa-heart"></i> Add to Favorites
+                                    </a>
+                                `}
+                            </div>
+                        </div>
+                    `).join('');
+                });
         }
     </script>
 </body>

@@ -677,9 +677,12 @@ def account():
 
 @app.route('/')
 def home():
+    # Get sorting parameter from request
+    sort_by = request.args.get('sort', 'recent')
+    
     try:
-        # Try the query with added_date
-        cursor.execute("""
+        # Build the query based on sort parameter
+        base_query = """
             SELECT b.*, u.username as owner_name, 
                    COALESCE(u.display_name, u.username) as owner_display_name,
                    c.name as category_name,
@@ -691,10 +694,21 @@ def home():
             LEFT JOIN reviews r ON b.id = r.book_id
             WHERE b.status = 'available'
             GROUP BY b.id, u.username, u.display_name, c.name
-            ORDER BY COALESCE(b.added_date, NOW()) DESC
-        """)
+        """
+        
+        # Add the appropriate ORDER BY clause
+        if sort_by == 'rating':
+            order_clause = "ORDER BY avg_rating DESC, b.added_date DESC"
+        elif sort_by == 'popular':
+            order_clause = "ORDER BY review_count DESC, b.added_date DESC"
+        else:  # default: recent
+            order_clause = "ORDER BY COALESCE(b.added_date, NOW()) DESC"
+            
+        full_query = f"{base_query} {order_clause}"
+        
+        cursor.execute(full_query)
     except psycopg2.Error:
-        # If that fails, use a simpler query without ordering by added_date
+        # If that fails, use a simpler query without complex ordering
         cursor.execute("""
             SELECT b.*, u.username as owner_name, 
                    COALESCE(u.display_name, u.username) as owner_display_name,
@@ -737,7 +751,7 @@ def home():
             'book_count': cat[2]
         })
 
-    return render_template('home.html', books=books, categories=categories)
+    return render_template('home.html', books=books, categories=categories, current_sort=sort_by)
 
 
 @app.route('/register')
@@ -1349,8 +1363,11 @@ def how_it_works():
 
 @app.route('/category/<int:id>')
 def category(id):
-    # Получаем информацию о книгах с учетом отзывов
-    cursor.execute("""
+    # Get sorting parameter from request
+    sort_by = request.args.get('sort', 'recent')
+    
+    # Build the base query
+    base_query = """
         SELECT b.*, 
                u.username as owner_name,
                COALESCE(u.display_name, u.username) as owner_display_name,
@@ -1363,8 +1380,19 @@ def category(id):
         LEFT JOIN reviews r ON b.id = r.book_id
         WHERE b.category_id = %s AND b.status = 'available'
         GROUP BY b.id, u.username, u.display_name, c.name
-        ORDER BY b.added_date DESC
-    """, (id,))
+    """
+    
+    # Add the appropriate ORDER BY clause
+    if sort_by == 'rating':
+        order_clause = "ORDER BY avg_rating DESC, b.added_date DESC"
+    elif sort_by == 'popular':
+        order_clause = "ORDER BY review_count DESC, b.added_date DESC"
+    else:  # default: recent
+        order_clause = "ORDER BY b.added_date DESC"
+        
+    full_query = f"{base_query} {order_clause}"
+    
+    cursor.execute(full_query, (id,))
     
     books_tuples = cursor.fetchall()
     
@@ -1397,7 +1425,11 @@ def category(id):
     cursor.execute("SELECT name FROM book_categories WHERE id = %s", (id,))
     category_name = cursor.fetchone()[0]
     
-    return render_template('category.html', books=books, category_name=category_name, categories=categories)
+    return render_template('category.html', 
+                           books=books, 
+                           category_name=category_name, 
+                           categories=categories, 
+                           current_sort=sort_by)
 
 # Add this function to initialize categories
 def initialize_categories():
@@ -2673,6 +2705,34 @@ def mark_message_read(data):
     except Exception as e:
         app.logger.error(f"Error marking message as read: {str(e)}")
         conn.rollback()
+
+@app.route('/api/books')
+def api_books():
+    sort_by = request.args.get('sort', 'recent')
+    base_query = """
+        SELECT b.*, u.username as owner_name, 
+               COALESCE(u.display_name, u.username) as owner_display_name,
+               c.name as category_name,
+               COALESCE(AVG(r.rating), 0) as avg_rating, 
+               COUNT(r.id) as review_count
+        FROM books b
+        JOIN users u ON b.owner_id = u.id
+        LEFT JOIN book_categories c ON b.category_id = c.id
+        LEFT JOIN reviews r ON b.id = r.book_id
+        WHERE b.status = 'available'
+        GROUP BY b.id, u.username, u.display_name, c.name
+    """
+    if sort_by == 'rating':
+        order_clause = "ORDER BY avg_rating DESC, b.added_date DESC"
+    elif sort_by == 'popular':
+        order_clause = "ORDER BY review_count DESC, b.added_date DESC"
+    else:
+        order_clause = "ORDER BY COALESCE(b.added_date, NOW()) DESC"
+    full_query = f"{base_query} {order_clause}"
+    cursor.execute(full_query)
+    column_names = [desc[0] for desc in cursor.description]
+    books = [dict(zip(column_names, row)) for row in cursor.fetchall()]
+    return jsonify({'books': books})
 
 # Modify the run line to use socketio
 if __name__ == '__main__':

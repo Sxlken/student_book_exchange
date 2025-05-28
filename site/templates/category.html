@@ -324,9 +324,9 @@
                 <h1>{{ category_name }} Books</h1>
                 <div class="filters">
                     <select id="sortBy" onchange="sortBooks(this.value)">
-                        <option value="recent">Most Recent</option>
-                        <option value="rating">Highest Rated</option>
-                        <option value="popular">Most Popular</option>
+                        <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="rating" {% if current_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
                     </select>
                 </div>
             </div>
