@@ -80,3 +80,4 @@ Electronic Library is a Flask-based web application designed to facilitate book 
 
 6. Open http://localhost:5000 in your browser.
    
+![image](https://github.com/user-attachments/assets/2f62bbe5-460c-4f3a-a3d9-f5d74ba320ad)
