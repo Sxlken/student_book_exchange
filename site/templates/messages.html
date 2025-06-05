@@ -356,6 +356,30 @@
         body.dark-mode .section-header {
             border-color: #444;
         }
+
+        .message-preview {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 500px;
+        }
+
+        .message-sender {
+            font-weight: 500;
+            margin-right: 4px;
+            color: #555;
+        }
+
+        body.dark-mode .message-preview {
+            color: #aaa;
+        }
+
+        body.dark-mode .message-sender {
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
@@ -445,6 +469,10 @@
                                     <div class="chat-header">
                                         <span class="username">{{ chat.display_name }}</span>
                                         <span class="time">{{ chat.last_message_time.strftime('%d.%m.%Y %H:%M') if chat.last_message_time }}</span>
+                                    </div>
+                                    <div class="message-preview">
+                                        {% if chat.is_from_me %}<span class="message-sender">You:</span>{% endif %}
+                                        {{ chat.last_message|truncate(60, true) }}
                                     </div>
                                     {% if chat.book_title %}
                                         <div class="book-info">

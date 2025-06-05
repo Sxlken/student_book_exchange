@@ -1823,7 +1823,7 @@ def messages():
     
     user_id = session['user_id']
     
-    # Получаем список чатов пользователя
+    # Updating query to include last message content
     cursor.execute("""
         WITH latest_messages AS (
             SELECT DISTINCT ON (
@@ -1837,7 +1837,9 @@ def messages():
                 WHEN sender_id = %s THEN receiver_id
                 ELSE sender_id
             END as other_user_id,
+            sender_id,
             book_id,
+            content,
             created_at
             FROM messages
             WHERE sender_id = %s OR receiver_id = %s
@@ -1850,6 +1852,8 @@ def messages():
             b.id as book_id,
             b.title as book_title,
             lm.created_at as last_message_time,
+            lm.content as last_message,
+            lm.sender_id = %s as is_from_me,
             (SELECT COUNT(*) FROM messages 
              WHERE receiver_id = %s AND sender_id = lm.other_user_id AND is_read = FALSE) as unread_count
         FROM latest_messages lm
@@ -1860,7 +1864,7 @@ def messages():
             WHERE user_id = %s AND other_user_id = lm.other_user_id
         )
         ORDER BY lm.created_at DESC
-    """, (user_id, user_id, user_id, user_id, user_id, user_id))
+    """, (user_id, user_id, user_id, user_id, user_id, user_id, user_id))
     
     chats = []
     for row in cursor.fetchall():
@@ -1871,7 +1875,9 @@ def messages():
             'book_id': row[3],
             'book_title': row[4],
             'last_message_time': row[5],
-            'unread_count': row[6]
+            'last_message': row[6],
+            'is_from_me': row[7],
+            'unread_count': row[8]
         })
     
     return render_template('messages.html', chats=chats)
