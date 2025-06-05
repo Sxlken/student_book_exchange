@@ -368,6 +368,80 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .account-container,
+        body.dark-mode .info-item,
+        body.dark-mode .notification {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i,
+        body.dark-mode .account-header h2,
+        body.dark-mode .info-label,
+        body.dark-mode h3 {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle i {
+            color: #fff;
+        }
+        
+        body.dark-mode .form-control {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        body.dark-mode .form-control[readonly] {
+            background-color: #222;
+        }
+        
+        body.dark-mode .info-item {
+            background-color: #222;
+        }
+        
+        body.dark-mode .delete-account-section {
+            background-color: #300;
+        }
+        
+        body.dark-mode .modal-content {
+            background-color: #222;
+            color: #fff;
+        }
+        
+        body.dark-mode .password-field input {
+            background-color: #333;
+            color: #fff;
+        }
+        
+        body.dark-mode footer {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a {
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a:hover {
+            color: #bbb;
+        }
     </style>
 </head>
 <body>
@@ -391,6 +465,23 @@
                     <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
                     <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
                 {% endif %}
+                <label for="theme" class="theme">
+                    <span class="theme__toggle-wrap">
+                        <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                        <span class="theme__fill"></span>
+                        <span class="theme__icon">
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                        </span>
+                    </span>
+                </label>
             </div>
         </nav>
     </header>
@@ -874,6 +965,36 @@
             if (deletePasswordField) {
                 deletePasswordField.addEventListener('input', validateDeleteForm);
             }
+            
+            // ... existing code ...
+        });
+
+        // Dark mode functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... existing notification code ...
+            
+            const darkModeToggle = document.getElementById('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+            
+            // Set initial state correctly
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.checked = true; // Make sure checkbox is checked when dark mode is active
+            } else {
+                document.body.classList.remove('dark-mode');
+                darkModeToggle.checked = false; // Make sure checkbox is unchecked when light mode is active
+            }
+            
+            darkModeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
+            });
             
             // ... existing code ...
         });

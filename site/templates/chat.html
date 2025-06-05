@@ -63,7 +63,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: #f0f0f0;
+            background-color: #6c757d;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -72,7 +72,7 @@
 
         .avatar i {
             font-size: 20px;
-            color: #007bff;
+            color: #fff;
         }
 
         .user-details .username {
@@ -781,6 +781,111 @@
         .message-edited {
             display: none;
         }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .chat-container,
+        body.dark-mode .modal-content,
+        body.dark-mode .message-form,
+        body.dark-mode .notification {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i,
+        body.dark-mode .back-button,
+        body.dark-mode .chat-header,
+        body.dark-mode .user-details .username {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle i {
+            color: #fff;
+        }
+        
+        body.dark-mode .message-content {
+            background-color: #333;
+            color: #fff;
+        }
+        
+        body.dark-mode .message.sent .message-content {
+            background-color: #0d47a1;
+            color: #fff;
+        }
+        
+        body.dark-mode .message.sent .message-content:before {
+            background-color: #0d47a1;
+        }
+        
+        body.dark-mode .message.received .message-content:before {
+            background-color: #333;
+        }
+        
+        body.dark-mode .message-input {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        body.dark-mode .attached-book {
+            background-color: #333;
+        }
+        
+        body.dark-mode .message.sent .attached-book {
+            background-color: #222;
+        }
+        
+        body.dark-mode .attached-book-title,
+        body.dark-mode .attached-book-author {
+            color: #fff;
+        }
+        
+        body.dark-mode .message-actions {
+            background-color: rgba(51, 51, 51, 0.9);
+        }
+        
+        body.dark-mode .message.sent .message-actions {
+            background-color: rgba(13, 71, 161, 0.9);
+        }
+        
+        body.dark-mode .system-message span {
+            background-color: #333;
+            color: #bbb;
+        }
+        
+        body.dark-mode .edit-modal .modal-content,
+        body.dark-mode #books-modal .modal-content {
+            background-color: #222;
+        }
+        
+        body.dark-mode .edit-input {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        body.dark-mode .book-card-small {
+            background-color: #333;
+            border-color: #555;
+        }
+        
+        body.dark-mode .book-title-small,
+        body.dark-mode .book-author-small {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -804,6 +909,23 @@
                     <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
                     <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
                 {% endif %}
+                <label for="theme" class="theme">
+                    <span class="theme__toggle-wrap">
+                        <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                        <span class="theme__fill"></span>
+                        <span class="theme__icon">
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                        </span>
+                    </span>
+                </label>
             </div>
         </nav>
     </header>
@@ -1410,6 +1532,31 @@
             $(document).keydown(function(e) {
                 if (e.key === "Escape" && $('#edit-modal').is(":visible")) {
                     $('#edit-modal').hide();
+                }
+            });
+
+            // Dark mode functionality
+            const themeToggle = document.getElementById('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+
+            // Set initial state
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.checked = false;
+            }
+
+            // Toggle dark mode when checkbox is clicked
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
                 }
             });
         });

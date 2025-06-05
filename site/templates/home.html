@@ -30,6 +30,23 @@
                     <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
                     <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
                 {% endif %}
+                <label for="theme" class="theme">
+                    <span class="theme__toggle-wrap">
+                        <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                        <span class="theme__fill"></span>
+                        <span class="theme__icon">
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                        </span>
+                    </span>
+                </label>
             </div>
         </nav>
         <div class="search-section">
@@ -392,6 +409,117 @@
             background-color: rgba(220, 53, 69, 0.15);
             color: #dc3545;
         }
+
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .book-card,
+        body.dark-mode .category-card,
+        body.dark-mode .notification {
+            background: #000000;
+            color: #fff;
+        }
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i {
+            color: #fff;
+        }
+        body.dark-mode #dark-mode-toggle {
+            color: #fff;
+        }
+        body.dark-mode #dark-mode-toggle i {
+            color: #fff;
+        }
+        body.dark-mode .book-card,
+        body.dark-mode .category-card {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        body.dark-mode .book-info h3 a,
+        body.dark-mode .book-info p,
+        body.dark-mode .book-info i,
+        body.dark-mode .book-actions .favorite-btn,
+        body.dark-mode .book-actions .request-btn,
+        body.dark-mode .category-card h3,
+        body.dark-mode .category-card p,
+        body.dark-mode .category-card i,
+        body.dark-mode .footer-content,
+        body.dark-mode .footer-content a,
+        body.dark-mode .footer-section h3,
+        body.dark-mode .footer-section p,
+        body.dark-mode .footer-section ul li a,
+        body.dark-mode .footer-bottom p {
+            color: #fff;
+        }
+        body.dark-mode .favorite-btn,
+        body.dark-mode .request-btn {
+            background: #000000;
+            border: 1px solid #444;
+        }
+        body.dark-mode .favorite-btn:hover,
+        body.dark-mode .request-btn:hover {
+            background: #333;
+        }
+        body.dark-mode .status-badge.status-available {
+            background: rgba(40, 167, 69, 0.25);
+            color: #7fff7f;
+        }
+        body.dark-mode .status-badge.status-pending {
+            background: rgba(255, 193, 7, 0.25);
+            color: #ffe066;
+        }
+        body.dark-mode .status-badge.status-borrowed {
+            background: rgba(220, 53, 69, 0.25);
+            color: #ff7f7f;
+        }
+        body.dark-mode .notification-success {
+            background-color: #218838;
+        }
+        body.dark-mode .notification-error {
+            background-color: #c82333;
+        }
+        body.dark-mode .notification-info {
+            background-color: #138496;
+        }
+        body.dark-mode .search-section,
+        body.dark-mode .search-form,
+        body.dark-mode .search-input,
+        body.dark-mode .category-select,
+        body.dark-mode .search-button {
+            background: #000000;
+            color: #fff;
+            border-color: #444;
+        }
+        body.dark-mode .search-input::placeholder {
+            color: #bbb;
+        }
+        body.dark-mode .category-select {
+            background: #000000;
+            color: #fff;
+        }
+        body.dark-mode .category-select option {
+            background: #000000;
+            color: #fff;
+        }
+        body.dark-mode .books-grid .no-books {
+            color: #fff;
+        }
+        body.dark-mode footer {
+            background: #000000;
+            color: #fff;
+        }
+        body.dark-mode .footer-content a {
+            color: #fff;
+        }
+        body.dark-mode .footer-content a:hover {
+            color: #bbb;
+        }
+        body.dark-mode h2 {
+            color: #fff;
+        }
     </style>
 
     <script>
@@ -405,6 +533,27 @@
                         notification.remove();
                     }, 500);
                 }, 3000);
+            });
+            
+            const themeToggle = document.getElementById('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+            
+            // Set initial state
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            }
+            
+            // Toggle dark mode when checkbox is clicked
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
             });
         });
 

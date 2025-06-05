@@ -54,7 +54,7 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background-color: #f0f0f0;
+            background-color: #6c757d;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -64,7 +64,7 @@
 
         .user-avatar i {
             font-size: 30px;
-            color: #666;
+            color: #fff;
         }
 
         .user-name {
@@ -208,6 +208,81 @@
         .footer-bottom {
             display: none !important;
         }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .users-container,
+        body.dark-mode .user-card,
+        body.dark-mode .notification {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i,
+        body.dark-mode h1,
+        body.dark-mode .section-header h1 {
+            color: #fff;
+        }
+        
+        body.dark-mode .user-card {
+            border-color: #444;
+        }
+        
+        body.dark-mode .user-card:hover {
+            box-shadow: 0 5px 15px rgba(255,255,255,0.1);
+        }
+        
+        body.dark-mode .user-avatar {
+            background-color: #333;
+        }
+        
+        body.dark-mode .user-avatar i {
+            color: #aaa;
+        }
+        
+        body.dark-mode .user-name {
+            color: #fff;
+        }
+        
+        body.dark-mode .user-university {
+            color: #aaa;
+        }
+        
+        body.dark-mode .search-filter input,
+        body.dark-mode .search-filter select {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        body.dark-mode .btn-chat {
+            background-color: #0d47a1;
+        }
+        
+        body.dark-mode .btn-chat:hover {
+            background-color: #083378;
+        }
+        
+        body.dark-mode .btn-secondary {
+            background-color: #555;
+        }
+        
+        body.dark-mode .btn-secondary:hover {
+            background-color: #444;
+        }
+        
+        body.dark-mode .no-results {
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
@@ -227,6 +302,23 @@
                     <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
                     <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
                     <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <label for="theme" class="theme">
+                        <span class="theme__toggle-wrap">
+                            <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                            <span class="theme__fill"></span>
+                            <span class="theme__icon">
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                            </span>
+                        </span>
+                    </label>
                 {% else %}
                     <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
                     <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
@@ -360,6 +452,31 @@
                         notification.remove();
                     }, 500);
                 }, 3000);
+            });
+            
+            // Dark mode toggle
+            const themeToggle = document.getElementById('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+            
+            // Set initial state
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.checked = false;
+            }
+            
+            // Toggle dark mode when checkbox is clicked
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
             });
         });
     </script>

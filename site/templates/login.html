@@ -53,6 +53,82 @@
         .notification.fade-out {
             animation: fadeOut 0.5s ease forwards;
         }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .login-container,
+        body.dark-mode .form-container,
+        body.dark-mode .notification {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode label {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle i {
+            color: #fff;
+        }
+        
+        body.dark-mode input[type="text"],
+        body.dark-mode input[type="password"],
+        body.dark-mode input[type="email"] {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        body.dark-mode .form-control:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        body.dark-mode .btn-primary {
+            background-color: #0d47a1;
+            border-color: #0a3d8f;
+        }
+        
+        body.dark-mode .btn-primary:hover {
+            background-color: #083378;
+        }
+        
+        body.dark-mode footer {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a {
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a:hover {
+            color: #bbb;
+        }
+        
+        body.dark-mode h2 {
+            color: #fff;
+        }
+        body.dark-mode .auth-card {
+            background: #000000;
+        }
     </style>
 </head>
 <body>
@@ -66,6 +142,23 @@
             </div>
             <div class="nav-links">
                 <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                <label for="theme" class="theme">
+                    <span class="theme__toggle-wrap">
+                        <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                        <span class="theme__fill"></span>
+                        <span class="theme__icon">
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                        </span>
+                    </span>
+                </label>
             </div>
         </nav>
     </header>
@@ -135,6 +228,27 @@
                         notification.remove();
                     }, 500);
                 }, 3000);
+            });
+
+            const themeToggle = document.getElementById('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+            
+            // Set initial state
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            }
+            
+            // Toggle dark mode when checkbox is clicked
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
             });
         });
     </script>

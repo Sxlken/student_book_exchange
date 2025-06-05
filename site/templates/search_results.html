@@ -7,6 +7,122 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/favorites.js') }}"></script>
     <title>Search Results - Student Book Exchange</title>
+    <style>
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .book-card,
+        body.dark-mode .no-results,
+        body.dark-mode .notification,
+        body.dark-mode .search-filters {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode .search-summary p,
+        body.dark-mode .search-summary strong {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle i {
+            color: #fff;
+        }
+        
+        body.dark-mode .book-info h3 a,
+        body.dark-mode .book-info p,
+        body.dark-mode .book-info i {
+            color: #fff;
+        }
+        
+        body.dark-mode .favorite-btn {
+            background: #000000;
+            color: #fff;
+            border: 1px solid #444;
+        }
+        
+        body.dark-mode .favorite-btn:hover {
+            background: #333;
+        }
+        
+        body.dark-mode .status-badge.status-available {
+            background: rgba(40, 167, 69, 0.25);
+            color: #7fff7f;
+        }
+        
+        body.dark-mode .status-badge.status-pending {
+            background: rgba(255, 193, 7, 0.25);
+            color: #ffe066;
+        }
+        
+        body.dark-mode .status-badge.status-borrowed {
+            background: rgba(220, 53, 69, 0.25);
+            color: #ff7f7f;
+        }
+        
+        body.dark-mode .search-section,
+        body.dark-mode .search-form,
+        body.dark-mode .search-input,
+        body.dark-mode .category-select,
+        body.dark-mode .search-button,
+        body.dark-mode .filter-group select {
+            background: #000000;
+            color: #fff;
+            border-color: #444;
+        }
+        
+        body.dark-mode .filter-group label {
+            color: #fff;
+        }
+        
+        body.dark-mode .search-input::placeholder {
+            color: #bbb;
+        }
+        
+        body.dark-mode .no-results i {
+            color: #444;
+        }
+        
+        body.dark-mode .no-results h3 {
+            color: #fff;
+        }
+        
+        body.dark-mode .no-results p {
+            color: #bbb;
+        }
+        
+        body.dark-mode .btn-primary {
+            background-color: #0d47a1;
+        }
+        
+        body.dark-mode footer {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a {
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a:hover {
+            color: #bbb;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -29,6 +145,9 @@
                 {% else %}
                     <a href="{{ url_for('register') }}"><i class="fas fa-sign-in-alt"></i> Sign In/Register</a>
                 {% endif %}
+                <button id="dark-mode-toggle" aria-label="Toggle dark mode" style="margin-left:16px;font-size:1.2em;background:none;border:none;cursor:pointer;">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
         </nav>
         <div class="search-section">
@@ -514,6 +633,24 @@
                         notification.remove();
                     }, 500);
                 }, 3000);
+            });
+        });
+
+        // Dark mode functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+            }
+            darkModeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    localStorage.setItem('darkMode', 'disabled');
+                }
             });
         });
     </script>

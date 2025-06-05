@@ -26,6 +26,23 @@
                     <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
                     <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
                     <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <label for="theme" class="theme">
+                        <span class="theme__toggle-wrap">
+                            <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                            <span class="theme__fill"></span>
+                            <span class="theme__icon">
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                            </span>
+                        </span>
+                    </label>
                 {% else %}
                     <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
                     <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
@@ -376,10 +393,127 @@
             font-size: 0.9em;
             color: #666;
         }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .book-card,
+        body.dark-mode .empty-state,
+        body.dark-mode .notification {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode .empty-state p {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle {
+            color: #fff;
+        }
+        
+        body.dark-mode #dark-mode-toggle i {
+            color: #fff;
+        }
+        
+        body.dark-mode .book-info h3 a,
+        body.dark-mode .book-info p,
+        body.dark-mode .book-info i {
+            color: #fff;
+        }
+        
+        body.dark-mode .btn {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        body.dark-mode .btn:hover {
+            background: #444;
+        }
+        
+        body.dark-mode .btn-primary {
+            background-color: #0d47a1;
+            border-color: #0a3d8f;
+        }
+        
+        body.dark-mode .btn-primary:hover {
+            background-color: #083378;
+        }
+        
+        body.dark-mode .status-badge.status-available {
+            background: rgba(40, 167, 69, 0.25);
+            color: #7fff7f;
+        }
+        
+        body.dark-mode .status-badge.status-pending {
+            background: rgba(255, 193, 7, 0.25);
+            color: #ffe066;
+        }
+        
+        body.dark-mode .status-badge.status-borrowed {
+            background: rgba(220, 53, 69, 0.25);
+            color: #ff7f7f;
+        }
+        
+        body.dark-mode footer {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a {
+            color: #fff;
+        }
+        
+        body.dark-mode .footer-content a:hover {
+            color: #bbb;
+        }
+
+        body.dark-mode .no-books {
+            text-align: center;
+            padding: 40px;
+            background: #000000;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(255,255,255,0.05);
+            margin: 20px;
+            color: #fff;
+        }
+
+        body.dark-mode .no-books i {
+            color: #4CAF50;
+        }
+
+        body.dark-mode .no-books h3 {
+            color: #fff;
+        }
+
+        body.dark-mode .no-books p {
+            color: #aaa;
+        }
+
+        body.dark-mode .no-books .btn-primary {
+            background-color: #0d47a1;
+            color: white;
+        }
+
+        body.dark-mode .no-books .btn-primary:hover {
+            background-color: #083378;
+        }
     </style>
 
     <script>
-        // Auto-hide notifications after 3 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const notifications = document.querySelectorAll('.notification');
             notifications.forEach(notification => {
@@ -389,6 +523,28 @@
                         notification.remove();
                     }, 500);
                 }, 3000);
+            });
+            
+            const themeToggle = document.getElementById('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+            
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.checked = false;
+            }
+            
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
             });
         });
     </script>

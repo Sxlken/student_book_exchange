@@ -96,7 +96,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background-color: #f0f0f0;
+            background-color: #6c757d;
             border: 1px solid #e0e0e0;
             display: flex;
             align-items: center;
@@ -107,7 +107,7 @@
 
         .avatar i {
             font-size: 22px;
-            color: #007bff;
+            color: #fff;
         }
 
         .chat-info {
@@ -255,6 +255,88 @@
         .footer-bottom {
             display: none !important;
         }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode header,
+        body.dark-mode main,
+        body.dark-mode .message-container,
+        body.dark-mode .chat-item,
+        body.dark-mode .no-chats,
+        body.dark-mode .notification {
+            background: #000000;
+            color: #fff;
+        }
+        
+        body.dark-mode .logo a,
+        body.dark-mode .nav-links a,
+        body.dark-mode .nav-links i,
+        body.dark-mode .logo i,
+        body.dark-mode h1,
+        body.dark-mode h3,
+        body.dark-mode .section-header h1,
+        body.dark-mode .username {
+            color: #fff;
+        }
+        
+        body.dark-mode .chat-item {
+            border-color: #444;
+        }
+        
+        body.dark-mode .chat-item:hover {
+            background-color: #222;
+            box-shadow: 0 3px 5px rgba(255,255,255,0.05);
+        }
+        
+        body.dark-mode .avatar {
+            background-color: #333;
+            border-color: #555;
+        }
+        
+        body.dark-mode .avatar i {
+            color: #fff;
+        }
+        
+        body.dark-mode .time,
+        body.dark-mode .hidden-time {
+            color: #aaa;
+        }
+        
+        body.dark-mode .section-header {
+            border-color: #444;
+        }
+        
+        body.dark-mode .btn-secondary {
+            background-color: #555;
+        }
+        
+        body.dark-mode .btn-secondary:hover {
+            background-color: #444;
+        }
+        
+        body.dark-mode .restore-btn {
+            background-color: #0d47a1;
+        }
+        
+        body.dark-mode .restore-btn:hover {
+            background-color: #083378;
+        }
+        
+        body.dark-mode .no-chats {
+            border-color: #444;
+        }
+        
+        body.dark-mode .no-chats i {
+            color: #007bff;
+        }
+        
+        body.dark-mode .no-chats p {
+            color: #aaa;
+        }
     </style>
 </head>
 <body>
@@ -274,6 +356,23 @@
                     <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
                     <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
                     <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <label for="theme" class="theme">
+                        <span class="theme__toggle-wrap">
+                            <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                            <span class="theme__fill"></span>
+                            <span class="theme__icon">
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                                <span class="theme__icon-part"></span>
+                            </span>
+                        </span>
+                    </label>
                 {% else %}
                     <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
                     <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
@@ -361,6 +460,31 @@
                         notification.remove();
                     }, 500);
                 }, 3000);
+            });
+            
+            // Dark mode toggle
+            const themeToggle = document.getElementById('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('darkMode');
+            
+            // Set initial state
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.checked = false;
+            }
+            
+            // Toggle dark mode when checkbox is clicked
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
             });
         });
     </script>
