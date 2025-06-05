@@ -129,6 +129,31 @@
         body.dark-mode .auth-card {
             background: #000000;
         }
+
+        /* Update the dark mode style for notifications */
+        body.dark-mode .notification {
+            /* Remove the background override for notifications */
+            background-color: transparent; /* This removes the black background */
+            color: white; /* Keep text white */
+        }
+
+        /* Keep the original notification colors even in dark mode */
+        body.dark-mode .notification {
+            background-color: #dc3545; /* Keep the original error notification red background */
+        }
+
+        /* If you have other notification types like success or info, add them like this: */
+        body.dark-mode .notification-success {
+            background-color: #28a745; /* Green for success */
+        }
+
+        body.dark-mode .notification-info {
+            background-color: #17a2b8; /* Blue for info */
+        }
+
+        body.dark-mode .notification-error {
+            background-color: #dc3545; /* Red for error */
+        }
     </style>
 </head>
 <body>
