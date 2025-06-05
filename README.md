@@ -14,7 +14,6 @@ Electronic Library is a Flask-based web application designed to facilitate book 
 - Add, edit, and remove books
 - Upload book covers and PDF files
 - Categorize books by subject
-- Set loan duration and book condition
 
 ### Social Features
 - Real-time messaging between users
