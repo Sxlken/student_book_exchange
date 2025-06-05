@@ -1,7 +1,7 @@
 # Student Book Exchange
 
 ## Overview 
-Electronic Library is a Flask-based web application designed to facilitate book sharing and exchanges among students. It provides a platform where students can list their books, search for books they need, review books, and directly communicate with other users to exchange books.
+Student Book Exchange is a Flask and Python based web application designed to facilitate book sharing and exchanges among students. It provides a electronic library platform where students can list their books, search for books they need, review books, and directly communicate with other users to exchange books.
 
 ## Features
 
