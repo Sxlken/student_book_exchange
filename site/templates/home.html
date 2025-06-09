@@ -555,6 +555,9 @@
                     localStorage.setItem('darkMode', 'disabled');
                 }
             });
+
+            // Initialize favorite buttons to show correct state
+            initFavoriteButtons();
         });
 
         function sortBooksAjax(sortBy) {

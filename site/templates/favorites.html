@@ -531,6 +531,17 @@
         body.dark-mode .footer-content a:hover {
             color: #bbb;
         }
+
+        /* Стиль для кнопки в состоянии загрузки */
+        .favorite-btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        /* Анимация плавного исчезновения книги */
+        .book-card {
+            transition: opacity 0.3s ease;
+        }
     </style>
 
     <script>
@@ -566,6 +577,15 @@
                     document.body.classList.remove('dark-mode');
                     localStorage.setItem('darkMode', 'disabled');
                 }
+            });
+            
+            // Add event listeners for favorite buttons
+            const favoriteButtons = document.querySelectorAll('.toggle-favorite');
+            favoriteButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = this.dataset.bookId;
+                    toggleFavorite(bookId);
+                });
             });
         });
     </script>

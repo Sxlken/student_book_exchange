@@ -4,6 +4,13 @@ function toggleFavorite(bookId) {
     const btn = document.querySelector(`.toggle-favorite[data-book-id="${bookId}"]`);
     if (!btn) return;
     
+    // Добавляем атрибут disabled, чтобы предотвратить множественные клики
+    if (btn.disabled) return;
+    btn.disabled = true;
+    
+    // Добавляем класс для визуальной индикации загрузки
+    btn.classList.add('loading');
+    
     fetch(`/toggle_favorite/${bookId}`, {
         method: 'POST',
         headers: {
@@ -23,20 +30,47 @@ function toggleFavorite(bookId) {
     })
     .then(data => {
         if (data.status === 'added') {
-            btn.innerHTML = `<i class="fas fa-heart" style="color: #ea4335;"></i> Favorite`;
+            btn.innerHTML = `<i class="fas fa-heart" style="color: #ea4335;"></i> Remove from Favorites`;
             
             // Отображаем уведомление об успешном добавлении
             showNotification('success', 'Book added to favorites!');
+            
+            // Если мы на странице избранного, возможно, стоит обновить страницу
+            if (window.location.pathname === '/favorites') {
+                window.location.reload();
+            }
         } else if (data.status === 'removed') {
             btn.innerHTML = `<i class="far fa-heart"></i> Add to Favorites`;
             
             // Отображаем уведомление об успешном удалении
             showNotification('success', 'Book removed from favorites!');
+            
+            // Если мы на странице избранного, удаляем карточку книги
+            if (window.location.pathname === '/favorites') {
+                const bookCard = btn.closest('.book-card');
+                if (bookCard) {
+                    bookCard.style.opacity = '0';
+                    setTimeout(() => {
+                        bookCard.remove();
+                        
+                        // Проверяем, не осталось ли книг
+                        const remainingBooks = document.querySelectorAll('.book-card');
+                        if (remainingBooks.length === 0) {
+                            window.location.reload(); // Обновляем страницу, чтобы показать сообщение "No favorite books yet"
+                        }
+                    }, 300);
+                }
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
         showNotification('error', error.message || 'An error occurred');
+    })
+    .finally(() => {
+        // Разблокируем кнопку и убираем класс загрузки
+        btn.disabled = false;
+        btn.classList.remove('loading');
     });
 }
 
@@ -112,7 +146,7 @@ function initFavoriteButtons() {
                     const bookId = btn.dataset.bookId;
                     
                     if (data.favorites.includes(parseInt(bookId))) {
-                        btn.innerHTML = `<i class="fas fa-heart" style="color: #ea4335;"></i> Favorite`;
+                        btn.innerHTML = `<i class="fas fa-heart" style="color: #ea4335;"></i> Remove from Favorites`;
                     }
                 });
             }
