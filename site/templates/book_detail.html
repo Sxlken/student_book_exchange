@@ -672,7 +672,10 @@
                     <a href="{{ url_for('my_books') }}"><i class="fas fa-book"></i> My Books</a>
                     <a href="{{ url_for('add_book') }}"><i class="fas fa-plus-circle"></i> Share a Book</a>
                     <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Favorites</a>
-                    <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
+                    <a href="{{ url_for('messages') }}" class="message-badge-container">
+                        <i class="fas fa-envelope"></i> Messages
+                        <span id="unread-messages-count" style="display:none"></span>
+                    </a>
                     <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
                     <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     <label for="theme" class="theme">

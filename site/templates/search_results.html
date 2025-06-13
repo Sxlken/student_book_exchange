@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/favorites.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/messages.js') }}"></script>
     <title>Search Results - Student Book Exchange</title>
     <style>
         /* Dark Mode Styles */
@@ -156,7 +157,10 @@
                 <a href="{{ url_for('my_books') }}"><i class="fas fa-book"></i> My Books</a>
                 <a href="{{ url_for('add_book') }}"><i class="fas fa-plus-circle"></i> Share a Book</a>
                 <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Favorites</a>
-                <a href="{{ url_for('messages') }}" class="message-badge-container"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="{{ url_for('messages') }}" class="message-badge-container">
+                    <i class="fas fa-envelope"></i> Messages
+                    <span id="unread-messages-count" style="display:none"></span>
+                </a>
                 <a href="{{ url_for('account') }}"><i class="fas fa-user"></i> Account</a>
                 <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 {% else %}
