@@ -122,6 +122,23 @@
         body.dark-mode .footer-content a:hover {
             color: #bbb;
         }
+        
+        /* Add these specific rules for notifications in dark mode */
+        body.dark-mode .notification {
+            color: #fff; /* Keep text white */
+        }
+        
+        body.dark-mode .notification-success {
+            background-color: #28a745; /* Green for success */
+        }
+        
+        body.dark-mode .notification-error {
+            background-color: #dc3545; /* Red for error */
+        }
+        
+        body.dark-mode .notification-info {
+            background-color: #17a2b8; /* Blue for info */
+        }
     </style>
 </head>
 <body>
@@ -145,9 +162,23 @@
                 {% else %}
                     <a href="{{ url_for('register') }}"><i class="fas fa-sign-in-alt"></i> Sign In/Register</a>
                 {% endif %}
-                <button id="dark-mode-toggle" aria-label="Toggle dark mode" style="margin-left:16px;font-size:1.2em;background:none;border:none;cursor:pointer;">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <label for="theme" class="theme">
+                    <span class="theme__toggle-wrap">
+                        <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+                        <span class="theme__fill"></span>
+                        <span class="theme__icon">
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                            <span class="theme__icon-part"></span>
+                        </span>
+                    </span>
+                </label>
             </div>
         </nav>
         <div class="search-section">
@@ -638,17 +669,26 @@
 
         // Dark mode functionality
         document.addEventListener('DOMContentLoaded', function() {
-            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const themeToggle = document.getElementById('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const savedMode = localStorage.getItem('darkMode');
+            
+            // Set initial state
             if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
                 document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.checked = false;
             }
-            darkModeToggle.addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                if (document.body.classList.contains('dark-mode')) {
+            
+            // Toggle dark mode when checkbox is clicked
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
                     localStorage.setItem('darkMode', 'enabled');
                 } else {
+                    document.body.classList.remove('dark-mode');
                     localStorage.setItem('darkMode', 'disabled');
                 }
             });

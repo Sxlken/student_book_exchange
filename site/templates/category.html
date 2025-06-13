@@ -549,8 +549,20 @@
     </footer>
 
     <script>
-        // Автоматически скрываем уведомления при загрузке страницы
+        // Функция для инициализации всего после загрузки страницы
         document.addEventListener('DOMContentLoaded', function() {
+            // Первым делом инициализируем кнопки избранного
+            initFavoriteButtons();
+            
+            // Затем добавляем обработчики событий для кнопок
+            const favoriteButtons = document.querySelectorAll('.toggle-favorite');
+            favoriteButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = this.dataset.bookId;
+                    toggleFavorite(bookId);
+                });
+            });
+            
             // Автоматически скрываем уведомления через 3 секунды
             const notifications = document.querySelectorAll('.notification');
             notifications.forEach(notification => {
@@ -562,28 +574,7 @@
                 }, 3000);
             });
             
-            // Инициализируем кнопки избранного
-            initFavoriteButtons();
-            
-            // Добавляем обработчики событий для кнопок избранного
-            const favoriteButtons = document.querySelectorAll('.toggle-favorite');
-            favoriteButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const bookId = this.dataset.bookId;
-                    toggleFavorite(bookId);
-                });
-            });
-        });
-
-        // Sort books function
-        function sortBooks(sortBy) {
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('sort', sortBy);
-            window.location.href = currentUrl.toString();
-        }
-
-        // Dark mode functionality
-        document.addEventListener('DOMContentLoaded', function() {
+            // Dark mode functionality
             const themeToggle = document.getElementById('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const savedMode = localStorage.getItem('darkMode');
@@ -608,6 +599,13 @@
                 }
             });
         });
+
+        // Sort books function
+        function sortBooks(sortBy) {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('sort', sortBy);
+            window.location.href = currentUrl.toString();
+        }
     </script>
 </body>
 </html> 

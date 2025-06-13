@@ -633,6 +633,29 @@
         body.dark-mode .form-group label {
             color: #fff;
         }
+
+        /* Maintain rating star colors in dark mode */
+        body.dark-mode .rating-input label {
+            color: #ddd;
+        }
+        
+        body.dark-mode .rating-input label:hover,
+        body.dark-mode .rating-input label:hover ~ label,
+        body.dark-mode .rating-input input:checked ~ label {
+            color: #ffc107;
+        }
+
+        body.dark-mode .notification-success {
+            background-color: #28a745;
+        }
+
+        body.dark-mode .notification-error {
+            background-color: #dc3545;
+        }
+
+        body.dark-mode .notification-info {
+            background-color: #17a2b8;
+        }
     </style>
 </head>
 <body>
