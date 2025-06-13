@@ -2371,7 +2371,6 @@ def unhide_chat(other_user_id):
     user_id = session['user_id']
 
     try:
-        # Удаляем запись о скрытом чате
         cursor.execute("""
             DELETE FROM hidden_chats
             WHERE user_id = %s AND other_user_id = %s
@@ -2380,8 +2379,9 @@ def unhide_chat(other_user_id):
         conn.commit()
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': True})
+            return jsonify({'success': True, 'message': 'Chat is now visible'})
 
+        # fallback for non-AJAX
         flash('Chat is now visible', 'success')
         return redirect(url_for('messages'))
     except Exception as e:
