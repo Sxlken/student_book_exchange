@@ -2336,11 +2336,12 @@ def show_hidden_chats():
 
     user_id = session['user_id']
 
-    # Получаем список скрытых чатов
+    # Получаем список скрытых чатов, теперь с display_name
     cursor.execute("""
         SELECT 
             h.other_user_id,
             u.username,
+            u.display_name,
             h.hidden_at
         FROM hidden_chats h
         JOIN users u ON h.other_user_id = u.id
@@ -2353,7 +2354,8 @@ def show_hidden_chats():
         hidden_chats.append({
             'user_id': row[0],
             'username': row[1],
-            'hidden_at': row[2]
+            'display_name': row[2],
+            'hidden_at': row[3]
         })
 
     return render_template('hidden_chats.html', hidden_chats=hidden_chats)
